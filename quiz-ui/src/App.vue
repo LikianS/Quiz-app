@@ -3,14 +3,11 @@ import { RouterLink, RouterView } from 'vue-router';
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
+  <header class="bg-primary text-white py-3">
+    <div class="container">
       <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/admin">Admin</RouterLink>
+        <RouterLink to="/" class="text-white text-decoration-none me-3"> Accueil </RouterLink>
+        <RouterLink to="/admin" class="text-white text-decoration-none"> Admin </RouterLink>
       </nav>
     </div>
   </header>

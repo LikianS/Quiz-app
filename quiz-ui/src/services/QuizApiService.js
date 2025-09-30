@@ -30,5 +30,7 @@ export default {
   getQuizInfo() {
     return this.call('get', 'quiz-info');
   },
-  getQuestion(position) {},
+  getQuestion(position) {
+    return this.call('get', `questions/${position}`);
+  },
 };

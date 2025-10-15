@@ -24,6 +24,11 @@ const router = createRouter({
       name: 'ScorePage',
       component: () => import('../views/ScorePage.vue'),
     },
+    {
+      path: '/questionsList',
+      name: 'QuestionList',
+      component: () => import('../views/QuestionPageList.vue') // Charge la page QuestionList
+    },
   ],
 });
 

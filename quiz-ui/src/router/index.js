@@ -24,6 +24,11 @@ const router = createRouter({
       name: 'ScorePage',
       component: () => import('../views/ScorePage.vue'),
     },
+    {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/Login.vue')
+  }
   ],
 });
 

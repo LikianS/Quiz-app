@@ -11,6 +11,7 @@ export default {
     const response = await axios.get(`${API_URL}/questions?position=${position}`);
     return response.data;
   },
+
   async submitParticipation(playerName, answers) {
     const response = await axios.post(`${API_URL}/participations`, {
       playerName,

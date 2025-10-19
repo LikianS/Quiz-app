@@ -96,11 +96,13 @@ onMounted(async () => {
       <div class="col-lg-8">
         <h1 v-if="!isQuizFinished">Question {{ currentQuestionPosition }} / {{ totalNumberOfQuestion }}</h1>
         <p v-if="!isQuizFinished">Score actuel : {{ score }}</p>
-        <QuestionDisplay
-          v-if="!isQuizFinished && currentQuestion"
-          :question="currentQuestion"
-          @answer-clicked="answerClickedHandler"
-        />
+        <div v-if="!isQuizFinished && currentQuestion">
+          <h3 class="mb-3">{{ currentQuestion.title }}</h3>
+          <QuestionDisplay
+            :question="currentQuestion"
+            @answer-clicked="answerClickedHandler"
+          />
+        </div>
         <div v-else>
           <h2>Quiz terminé !</h2>
           <p>Votre score : {{ score }}</p>

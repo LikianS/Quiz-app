@@ -10,11 +10,19 @@ const currentQuestionPosition = ref(1);
 const totalNumberOfQuestion = ref(0);
 const score = ref(0);
 const router = useRouter();
+const isQuizFinished = ref(false);
+const answers = ref([]);
 
 async function loadQuestionByPosition(position) {
-  const result = await quizApiService.getQuestion(position);
-  if (result && result.data) {
-    currentQuestion.value = result.data;
+  try {
+    const result = await quizApiService.getQuestion(position);
+    if (result) {
+      currentQuestion.value = result;
+    } else {
+      console.error('Question not found for position:', position);
+    }
+  } catch (error) {
+    console.error('Error loading question:', error);
   }
 }
 
@@ -31,22 +39,46 @@ async function answerClickedHandler(answerIdx) {
 }
 
 function endQuiz() {
-  participationStorageService.saveParticipationScore(score.value);
-  router.push('/score');
+  isQuizFinished.value = true;
+  const playerName = participationStorageService.getPlayerName();
+
+  quizApiService.submitParticipation(playerName, answers.value)
+    .then(response => {
+      console.log('Participation submitted successfully:', response);
+      score.value = response.score;
+      participationStorageService.saveParticipationScore(score.value);
+      router.push('/score');
+    })
+    .catch(error => {
+      console.error('Error submitting participation:', error);
+    });
 }
 
 onMounted(async () => {
-  const quizInfo = await quizApiService.getQuizInfo();
-  if (quizInfo && quizInfo.data && quizInfo.data.totalQuestions) {
-    totalNumberOfQuestion.value = quizInfo.data.totalQuestions;
+  try {
+    const quizInfo = await quizApiService.getQuizInfo();
+    if (quizInfo && quizInfo.size) {
+      totalNumberOfQuestion.value = quizInfo.size;
+    }
+    await loadQuestionByPosition(currentQuestionPosition.value);
+  } catch (error) {
+    console.error('Error initializing quiz:', error);
   }
-  await loadQuestionByPosition(currentQuestionPosition.value);
 });
 </script>
 
 <template>
   <div class="container mt-5">
-    <h1>Question {{ currentQuestionPosition }} / {{ totalNumberOfQuestion }}</h1>
-    <QuestionDisplay :question="currentQuestion" @answer-clicked="answerClickedHandler" />
+    <h1 v-if="!isQuizFinished">Question {{ currentQuestionPosition }} / {{ totalNumberOfQuestion }}</h1>
+    <p v-if="!isQuizFinished">Score actuel : {{ score }}</p> 
+    <QuestionDisplay
+      v-if="!isQuizFinished && currentQuestion"
+      :question="currentQuestion"
+      @answer-clicked="answerClickedHandler"
+    />
+    <div v-else>
+      <h2>Quiz terminé !</h2>
+      <p>Votre score : {{ score }}</p>
+    </div>
   </div>
 </template>

@@ -42,7 +42,7 @@ async function answerClickedHandler(answerIdx) {
     participationRows.value[currentQuestionPosition.value - 1] = {
       position: currentQuestionPosition.value,
       answerIndex: answerIdx,
-      answerText: selected ? selected.text : ''
+      answerText: selected ? selected.text : '',
     };
   }
   if (currentQuestionPosition.value < totalNumberOfQuestion.value) {
@@ -57,19 +57,22 @@ function endQuiz() {
   isQuizFinished.value = true;
   const name = participationStorageService.getPlayerName();
 
-  quizApiService.submitParticipation(name, answers.value)
-    .then(response => {
+  quizApiService
+    .submitParticipation(name, answers.value)
+    .then((response) => {
       console.log('Participation submitted successfully:', response);
-      score.value = response.score;
       participationStorageService.saveParticipationScore(score.value);
-      quizApiService.getQuizInfo().then((info) => {
-        if (info && info.scores) {
-          previousParticipations.value = info.scores;
-        }
-        router.push('/score');
-      }).catch(() => router.push('/score'));
+      quizApiService
+        .getQuizInfo()
+        .then((info) => {
+          if (info && info.scores) {
+            previousParticipations.value = info.scores;
+          }
+          router.push('/score');
+        })
+        .catch(() => router.push('/score'));
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Error submitting participation:', error);
     });
 }
@@ -94,14 +97,13 @@ onMounted(async () => {
   <div class="container mt-5">
     <div class="row g-4">
       <div class="col-lg-8">
-        <h1 v-if="!isQuizFinished">Question {{ currentQuestionPosition }} / {{ totalNumberOfQuestion }}</h1>
+        <h1 v-if="!isQuizFinished">
+          Question {{ currentQuestionPosition }} / {{ totalNumberOfQuestion }}
+        </h1>
         <p v-if="!isQuizFinished">Score actuel : {{ score }}</p>
         <div v-if="!isQuizFinished && currentQuestion">
           <h3 class="mb-3">{{ currentQuestion.title }}</h3>
-          <QuestionDisplay
-            :question="currentQuestion"
-            @answer-clicked="answerClickedHandler"
-          />
+          <QuestionDisplay :question="currentQuestion" @answer-clicked="answerClickedHandler" />
         </div>
         <div v-else>
           <h2>Quiz terminé !</h2>
@@ -109,5 +111,5 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-   </div>
+  </div>
 </template>

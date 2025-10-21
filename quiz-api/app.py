@@ -333,8 +333,6 @@ def resolve_selected_index(raw, answers_list):
     if not answers_list:
         return None
     if isinstance(raw, int):
-        if 1 <= raw <= len(answers_list):
-            return raw - 1
         if 0 <= raw < len(answers_list):
             return raw
         return None

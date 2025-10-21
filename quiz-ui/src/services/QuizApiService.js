@@ -1,34 +1,22 @@
 import axios from 'axios';
 
-const instance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}`,
-  json: true,
-});
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default {
-  async call(method, resource, data = null, token = null) {
-    var headers = {
-      'Content-Type': 'application/json',
-    };
-    if (token != null) {
-      headers.authorization = 'Bearer ' + token;
-    }
+  async getQuizInfo() {
+    const response = await axios.get(`${API_URL}/quiz-info`);
+    return response.data;
+  },
+  async getQuestion(position) {
+    const response = await axios.get(`${API_URL}/questions?position=${position}`);
+    return response.data;
+  },
 
-    return instance({
-      method,
-      headers: headers,
-      url: resource,
-      data,
-    })
-      .then((response) => {
-        return { status: response.status, data: response.data };
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  },
-  getQuizInfo() {
-    return this.call('get', 'quiz-info');
-  },
-  getQuestion(position) {},
+  async submitParticipation(playerName, answers) {
+    const response = await axios.post(`${API_URL}/participations`, {
+      playerName,
+      answers,
+    });
+    return response.data;
+  }
 };

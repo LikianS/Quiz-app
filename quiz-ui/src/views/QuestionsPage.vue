@@ -1,6 +1,17 @@
+<script setup>
+import { defineProps, defineEmits } from 'vue';
+
+defineProps(['question']);
+defineEmits(['answer-clicked']);
+</script>
+
 <template>
-  <div class="container mt-5">
-    <h1>Questions du Quiz</h1>
-    <p>Ici s'afficheront les questions du quiz.</p>
+  <div>
+    <h2>{{ question.text }}</h2>
+    <ul>
+      <li v-for="(answer, index) in question.possibleAnswers" :key="index">
+        <button @click="$emit('answer-clicked', index)">{{ answer }}</button>
+      </li>
+    </ul>
   </div>
 </template>

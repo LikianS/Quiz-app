@@ -20,15 +20,17 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router' // <-- ajoute ceci
 
 const password = ref('')
 const error = ref(false)
 const ADMIN_PASSWORD = 'iloveflask'
+const router = useRouter() // <-- ajoute ceci
 
 function handleLogin() {
     if (password.value === ADMIN_PASSWORD) {
         error.value = false
-        this.$router.push('/admin')
+        router.push('/admin') 
     } else {
         error.value = true
     }

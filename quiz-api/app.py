@@ -71,12 +71,11 @@ def post_question():
         return jsonify({"error": "Bad request"}), 400
     try:
         question = Question.from_json(data)
-        quiz_name = data.get('quiz_name', 'default')
     except Exception:
         return jsonify({"error": "Bad request"}), 400
 
     try:
-        qid = insert_question(question, quiz_name)
+        qid = insert_question(question)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
     return jsonify({"id": qid}), 200
@@ -91,25 +90,20 @@ def get_question_by_id_route(qid):
 @app.route('/questions', methods=['GET'])
 def get_question_by_position_route():
     position = request.args.get('position', type=int)
-    quiz_name = request.args.get('quiz_name', 'default')
     if position is None:
         return jsonify({"error": "Missing position"}), 400
-    question = get_question_by_position(position, quiz_name)
+    question = get_question_by_position(position)
     if question:
         return jsonify(question.to_json()), 200
     return jsonify({"error": "Not found"}), 404
 
 @app.route('/questions/all', methods=['GET'])
 def get_all_questions():
-    quiz_name = request.args.get('quiz_name', 'default')
-    from question_repository import get_quiz_id
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()
-    quiz_id = get_quiz_id(cur, quiz_name)
-    cur.execute("SELECT id FROM Question WHERE quiz_id = ? ORDER BY position ASC", (quiz_id,))
+    cur.execute("SELECT id FROM Question ORDER BY position ASC")
     question_ids = [row[0] for row in cur.fetchall()]
     conn.close()
-    from question_repository import get_question_by_id
     questions = []
     for qid in question_ids:
         question = get_question_by_id(qid)

@@ -10,21 +10,12 @@ def create_db():
     cur.execute("DROP TABLE IF EXISTS Question")
     cur.execute("DROP TABLE IF EXISTS Quiz")
     cur.execute("""
-        CREATE TABLE Quiz (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE
-        )
-    """)
-    cur.execute("""
         CREATE TABLE Question (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            quiz_id INTEGER,
-            position INTEGER,
+            position INTEGER UNIQUE,
             title TEXT,
             text TEXT,
-            image TEXT,
-            FOREIGN KEY(quiz_id) REFERENCES Quiz(id) ON DELETE CASCADE,
-            UNIQUE(quiz_id, position)
+            image TEXT
         )
     """)
     cur.execute("""

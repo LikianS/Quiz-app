@@ -3,11 +3,27 @@ from question_model import Question
 
 DB_PATH = "DB_quiz.db"
 
-def insert_question(question: Question):
+def get_quiz_id(cur, quiz_name="default"):
+    cur.execute("SELECT id FROM Quiz WHERE name = ?", (quiz_name,))
+    quiz_row = cur.fetchone()
+    if not quiz_row:
+        cur.execute("INSERT INTO Quiz (name) VALUES (?)", (quiz_name,))
+        return cur.lastrowid
+    return quiz_row[0]
+
+def insert_question(question: Question, quiz_name="default"):
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()
     try:
-        cur.execute("SELECT COUNT(*) FROM Question")
+        cur.execute("SELECT id FROM Quiz WHERE name = ?", (quiz_name,))
+        quiz_row = cur.fetchone()
+        if not quiz_row:
+            cur.execute("INSERT INTO Quiz (name) VALUES (?)", (quiz_name,))
+            quiz_id = cur.lastrowid
+        else:
+            quiz_id = quiz_row[0]
+
+        cur.execute("SELECT COUNT(*) FROM Question WHERE quiz_id = ?", (quiz_id,))
         count = cur.fetchone()[0]
 
         if question.position is None or question.position < 1:
@@ -16,13 +32,13 @@ def insert_question(question: Question):
             question.position = count + 1
 
         cur.execute(
-            "UPDATE Question SET position = position + 1000 WHERE position >= ?",
-            (question.position,)
+            "UPDATE Question SET position = position + 1000 WHERE quiz_id = ? AND position >= ?",
+            (quiz_id, question.position)
         )
 
         cur.execute(
-            "INSERT INTO Question (position, title, text, image) VALUES (?, ?, ?, ?)",
-            (question.position, question.title, question.text, question.image)
+            "INSERT INTO Question (quiz_id, position, title, text, image) VALUES (?, ?, ?, ?, ?)",
+            (quiz_id, question.position, question.title, question.text, question.image)
         )
         qid = cur.lastrowid
 
@@ -33,8 +49,8 @@ def insert_question(question: Question):
             )
 
         cur.execute(
-            "UPDATE Question SET position = position - 999 WHERE position >= ?",
-            (question.position + 1000,)
+            "UPDATE Question SET position = position - 999 WHERE quiz_id = ? AND position >= ?",
+            (quiz_id, question.position + 1000)
         )
 
         conn.commit()
@@ -66,10 +82,11 @@ def get_question_by_id(qid):
                         possibleAnswers=possibleAnswers, id=row[0])
     return None
 
-def get_question_by_position(position):
+def get_question_by_position(position, quiz_name="default"):
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()
-    cur.execute("SELECT id, position, title, text, image FROM Question WHERE position = ?", (position,))
+    quiz_id = get_quiz_id(cur, quiz_name)
+    cur.execute("SELECT id, position, title, text, image FROM Question WHERE quiz_id = ? AND position = ?", (quiz_id, position))
     row = cur.fetchone()
     conn.close()
     if row:
@@ -188,10 +205,11 @@ def delete_all_questions():
     conn.commit()
     conn.close()
 
-def get_questions_count():
+def get_questions_count(quiz_name="default"):
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM Question")
+    quiz_id = get_quiz_id(cur, quiz_name)
+    cur.execute("SELECT COUNT(*) FROM Question WHERE quiz_id = ?", (quiz_id,))
     count = cur.fetchone()[0]
     conn.close()
     return count

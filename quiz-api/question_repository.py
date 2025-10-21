@@ -7,23 +7,41 @@ def insert_question(question: Question):
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()
     try:
-        cur.execute("SELECT id FROM Question WHERE position = ?", (question.position,))
-        if cur.fetchone():
-            raise Exception("Position already used by another question")
+        cur.execute("SELECT COUNT(*) FROM Question")
+        count = cur.fetchone()[0]
+
+        if question.position is None or question.position < 1:
+            question.position = count + 1
+        elif question.position > count + 1:
+            question.position = count + 1
+
+        cur.execute(
+            "UPDATE Question SET position = position + 1000 WHERE position >= ?",
+            (question.position,)
+        )
+
         cur.execute(
             "INSERT INTO Question (position, title, text, image) VALUES (?, ?, ?, ?)",
             (question.position, question.title, question.text, question.image)
         )
         qid = cur.lastrowid
+
         for answer in question.possibleAnswers:
             cur.execute(
                 "INSERT INTO Answer (question_id, text, isCorrect) VALUES (?, ?, ?)",
                 (qid, answer['text'], int(answer['isCorrect']))
             )
+
+        cur.execute(
+            "UPDATE Question SET position = position - 999 WHERE position >= ?",
+            (question.position + 1000,)
+        )
+
         conn.commit()
         return qid
     except Exception as e:
         conn.rollback()
+        print("Erreur insert_question:", e)
         raise e
     finally:
         conn.close()
@@ -44,7 +62,8 @@ def get_question_by_id(qid):
     conn.close()
     if row:
         possibleAnswers = get_possible_answers(row[0])
-        return Question(position=row[1], title=row[2], text=row[3], image=row[4], possibleAnswers=possibleAnswers, id=row[0])
+        return Question(position=row[1], title=row[2], text=row[3], image=row[4],
+                        possibleAnswers=possibleAnswers, id=row[0])
     return None
 
 def get_question_by_position(position):
@@ -55,43 +74,111 @@ def get_question_by_position(position):
     conn.close()
     if row:
         possibleAnswers = get_possible_answers(row[0])
-        return Question(position=row[1], title=row[2], text=row[3], image=row[4], possibleAnswers=possibleAnswers, id=row[0])
+        return Question(position=row[1], title=row[2], text=row[3], image=row[4],
+                        possibleAnswers=possibleAnswers, id=row[0])
     return None
 
-def update_question(question: Question):
+def update_question(qid, title=None, text=None, image=None, possibleAnswers=None):
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()
-    question_id_int = int(question.id) if question.id is not None else None
-
-    cur.execute(
-        "SELECT id FROM Question WHERE position=? AND id!=?",
-        (question.position, question_id_int)
-    )
-    row = cur.fetchone()
-    if row is not None and row[0] != question_id_int:
+    try:
+        if title is not None or text is not None or image is not None:
+            cur.execute("UPDATE Question SET title = COALESCE(?, title), text = COALESCE(?, text), image = COALESCE(?, image) WHERE id = ?",
+                        (title, text, image, qid))
+        if possibleAnswers is not None:
+            cur.execute("DELETE FROM Answer WHERE question_id = ?", (qid,))
+            for ans in possibleAnswers:
+                cur.execute("INSERT INTO Answer (question_id, text, isCorrect) VALUES (?, ?, ?)",
+                            (qid, ans['text'], int(ans['isCorrect'])))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
         conn.close()
-        raise Exception("Position already used by another question")
 
-    cur.execute("DELETE FROM Answer WHERE question_id = ?", (question_id_int,))
-    cur.execute(
-        "UPDATE Question SET title=?, text=?, image=?, position=? WHERE id=?",
-        (question.title, question.text, question.image, question.position, question_id_int)
-    )
-    for answer in question.possibleAnswers:
-        cur.execute(
-            "INSERT INTO Answer (question_id, text, isCorrect) VALUES (?, ?, ?)",
-            (question_id_int, answer['text'], int(answer['isCorrect']))
-        )
-    conn.commit()
-    conn.close()
+def _rewrite_sequential_positions(cur, ids_in_order):
+    """
+    Réécrit les positions 1..N pour les ids donnés dans l'ordre.
+    Utilise un offset +1000 pour éviter les collisions UNIQUE.
+    """
+    cur.execute("UPDATE Question SET position = position + 1000")
+    for new_pos, qid in enumerate(ids_in_order, start=1):
+        cur.execute("UPDATE Question SET position = ? WHERE id = ?", (new_pos, qid))
+
+def move_question(old_position, new_position):
+    if old_position == new_position:
+        return
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT id FROM Question ORDER BY position ASC")
+        ids = [row[0] for row in cur.fetchall()]
+        total = len(ids)
+        if old_position < 1 or old_position > total:
+            raise Exception("Question not found at position")
+        if new_position < 1:
+            new_position = 1
+        if new_position > total:
+            new_position = total
+
+        if old_position == new_position:
+            conn.close()
+            return
+
+        moving = ids.pop(old_position - 1)
+        ids.insert(new_position - 1, moving)
+
+        _rewrite_sequential_positions(cur, ids)
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
+
+def delete_question_by_position(position):
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT id FROM Question WHERE position = ?", (position,))
+        row = cur.fetchone()
+        if not row:
+            raise Exception("Question not found")
+        qid = row[0]
+        cur.execute("DELETE FROM Answer WHERE question_id = ?", (qid,))
+        cur.execute("DELETE FROM Question WHERE id = ?", (qid,))
+
+        cur.execute("SELECT id FROM Question ORDER BY position ASC")
+        ids_left = [r[0] for r in cur.fetchall()]
+        _rewrite_sequential_positions(cur, ids_left)
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
 
 def delete_question_by_id(qid):
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()
-    cur.execute("DELETE FROM Answer WHERE question_id = ?", (qid,))
-    cur.execute("DELETE FROM Question WHERE id = ?", (qid,))
-    conn.commit()
-    conn.close()
+    try:
+        cur.execute("SELECT id FROM Question WHERE id = ?", (qid,))
+        row = cur.fetchone()
+        if not row:
+            conn.close()
+            return
+        cur.execute("DELETE FROM Answer WHERE question_id = ?", (qid,))
+        cur.execute("DELETE FROM Question WHERE id = ?", (qid,))
+
+        cur.execute("SELECT id FROM Question ORDER BY position ASC")
+        ids_left = [r[0] for r in cur.fetchall()]
+        _rewrite_sequential_positions(cur, ids_left)
+
+        conn.commit()
+    finally:
+        conn.close()
 
 def delete_all_questions():
     conn = sqlite3.connect(DB_PATH, timeout=5)

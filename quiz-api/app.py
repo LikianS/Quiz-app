@@ -293,24 +293,6 @@ def update_or_move_question_by_position():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route('/questions/all', methods=['GET'])
-def get_all_questions():
-    quiz_name = request.args.get('quiz_name', 'default')
-    from question_repository import get_quiz_id
-    conn = sqlite3.connect(DB_PATH, timeout=5)
-    cur = conn.cursor()
-    quiz_id = get_quiz_id(cur, quiz_name)
-    cur.execute("SELECT id FROM Question WHERE quiz_id = ? ORDER BY position ASC", (quiz_id,))
-    question_ids = [row[0] for row in cur.fetchall()]
-    conn.close()
-    from question_repository import get_question_by_id
-    questions = []
-    for qid in question_ids:
-        question = get_question_by_id(qid)
-        if question:
-            questions.append(question.to_json())
-    return jsonify(questions), 200
-
 @app.route('/questions', methods=['DELETE'])
 def delete_question_by_position_route():
     auth_header = request.headers.get('Authorization')
@@ -333,10 +315,26 @@ def delete_question_by_position_route():
     except Exception:
         return jsonify({"error": "Not found"}), 404
     
+@app.route('/questions/all', methods=['GET'])
+def get_all_questions():
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM Question ORDER BY position ASC")
+    rows = cur.fetchall()
+    conn.close()
+    questions = []
+    for row in rows:
+        q = get_question_by_id(row[0])
+        if q:
+            questions.append(q.to_json())
+    return jsonify(questions),200
+
 def resolve_selected_index(raw, answers_list):
     if not answers_list:
         return None
     if isinstance(raw, int):
+        if 1 <= raw <= len(answers_list):
+            return raw - 1
         if 0 <= raw < len(answers_list):
             return raw
         return None

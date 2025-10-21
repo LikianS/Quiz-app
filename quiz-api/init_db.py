@@ -8,7 +8,6 @@ def create_db():
     cur.execute("DROP TABLE IF EXISTS Answer")
     cur.execute("DROP TABLE IF EXISTS Participation")
     cur.execute("DROP TABLE IF EXISTS Question")
-    cur.execute("DROP TABLE IF EXISTS Quiz")
     cur.execute("""
         CREATE TABLE Question (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

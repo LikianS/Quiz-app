@@ -97,20 +97,6 @@ def get_question_by_position_route():
         return jsonify(question.to_json()), 200
     return jsonify({"error": "Not found"}), 404
 
-@app.route('/questions/all', methods=['GET'])
-def get_all_questions():
-    conn = sqlite3.connect(DB_PATH, timeout=5)
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM Question ORDER BY position ASC")
-    question_ids = [row[0] for row in cur.fetchall()]
-    conn.close()
-    questions = []
-    for qid in question_ids:
-        question = get_question_by_id(qid)
-        if question:
-            questions.append(question.to_json())
-    return jsonify(questions), 200
-
 @app.route('/questions/<int:qid>', methods=['DELETE'])
 def delete_question(qid):
     try:
@@ -306,6 +292,24 @@ def update_or_move_question_by_position():
         return '', 204
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/questions/all', methods=['GET'])
+def get_all_questions():
+    quiz_name = request.args.get('quiz_name', 'default')
+    from question_repository import get_quiz_id
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    cur = conn.cursor()
+    quiz_id = get_quiz_id(cur, quiz_name)
+    cur.execute("SELECT id FROM Question WHERE quiz_id = ? ORDER BY position ASC", (quiz_id,))
+    question_ids = [row[0] for row in cur.fetchall()]
+    conn.close()
+    from question_repository import get_question_by_id
+    questions = []
+    for qid in question_ids:
+        question = get_question_by_id(qid)
+        if question:
+            questions.append(question.to_json())
+    return jsonify(questions), 200
 
 @app.route('/questions', methods=['DELETE'])
 def delete_question_by_position_route():

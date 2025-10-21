@@ -58,7 +58,7 @@ function endQuiz() {
   const name = participationStorageService.getPlayerName();
 
   quizApiService
-    .submitParticipation(name, answers.value)
+    .submitParticipation(name, answers.value, score.value)
     .then((response) => {
       console.log('Participation submitted successfully:', response);
       participationStorageService.saveParticipationScore(score.value);

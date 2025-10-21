@@ -12,11 +12,12 @@ export default {
     return response.data;
   },
 
-  async submitParticipation(playerName, answers) {
+  async submitParticipation(playerName, answers, score) {
     const response = await axios.post(`${API_URL}/participations`, {
       playerName,
       answers,
+      score,
     });
     return response.data;
-  }
+  },
 };

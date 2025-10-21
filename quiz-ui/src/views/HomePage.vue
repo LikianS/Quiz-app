@@ -10,8 +10,8 @@ const participationScore = participationStorageService.getParticipationScore();
 
 onMounted(async () => {
   const result = await quizApiService.getQuizInfo();
-  if (result && result.data && result.data.scores) {
-    registeredScores.value = result.data.scores;
+  if (result && result.scores) {
+    registeredScores.value = result.scores;
   }
 });
 </script>
@@ -21,8 +21,27 @@ onMounted(async () => {
 
   <ScoreDisplay :playerName="playerName" :score="participationScore" />
 
-  <div v-for="scoreEntry in registeredScores" :key="scoreEntry.date">
-    {{ scoreEntry.playerName }} - {{ scoreEntry.score }}
+  <div class="card mt-3">
+    <div class="card-header">Participations précédentes</div>
+    <div class="card-body">
+      <div class="table-responsive" v-if="registeredScores.length">
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              <th>Joueur</th>
+              <th class="text-end">Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(scoreEntry, i) in registeredScores" :key="i">
+              <td>{{ scoreEntry.playerName }}</td>
+              <td class="text-end">{{ scoreEntry.score }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="text-muted">Aucune participation enregistrée.</p>
+    </div>
   </div>
   <router-link to="/new-quiz">Démarrer le quiz !</router-link>
 </template>

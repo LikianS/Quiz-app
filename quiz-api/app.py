@@ -217,22 +217,24 @@ def add_participation():
     question_ids = [row[0] for row in cur.fetchall()]
     conn.close()
 
-    score = 0
-    for i, raw_answer in enumerate(answers):
-        if i >= len(question_ids):
-            break
-        qid = question_ids[i]
-        question = get_question_by_id(qid)
-        if not question:
-            continue
-        correct_indices = [idx for idx, ans in enumerate(question.possibleAnswers) if ans['isCorrect']]
-        if not correct_indices:
-            continue
-        selected = resolve_selected_index(raw_answer, question.possibleAnswers)
-        if selected is None:
-            continue
-        if selected in correct_indices:
-            score += 1
+    score = data.get('score')
+    if score is None:
+        score = 0
+        for i, raw_answer in enumerate(answers):
+            if i >= len(question_ids):
+                break
+            qid = question_ids[i]
+            question = get_question_by_id(qid)
+            if not question:
+                continue
+            correct_indices = [idx for idx, ans in enumerate(question.possibleAnswers) if ans['isCorrect']]
+            if not correct_indices:
+                continue
+            selected = resolve_selected_index(raw_answer, question.possibleAnswers)
+            if selected is None:
+                continue
+            if selected in correct_indices:
+                score += 1
 
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()

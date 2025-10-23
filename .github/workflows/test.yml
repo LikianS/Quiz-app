@@ -1,0 +1,47 @@
+name: Test Flask API with Postman
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker images
+        run: docker compose -f docker-compose.yml build
+
+      - name: Start containers
+        run: docker compose -f docker-compose.yml up -d
+
+      - name: Wait for Flask API to be ready
+        run: sleep 5  # laisse le temps à Flask de démarrer
+
+      - name: Install Newman (Postman CLI)
+        run: npm install -g newman
+
+      - name: Run Postman tests
+        run: |
+          newman run "Quiz TDD.postman_collection.json" \
+            --env-var baseUrl=http://127.0.0.1:5000 \
+            --env-var pwd=iloveflask
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.likian }}
+          password: ${{ secrets.Pass1234! }}
+
+      - name: Push Docker images
+        run: docker compose push

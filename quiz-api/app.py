@@ -217,22 +217,24 @@ def add_participation():
     question_ids = [row[0] for row in cur.fetchall()]
     conn.close()
 
-    score = 0
-    for i, raw_answer in enumerate(answers):
-        if i >= len(question_ids):
-            break
-        qid = question_ids[i]
-        question = get_question_by_id(qid)
-        if not question:
-            continue
-        correct_indices = [idx for idx, ans in enumerate(question.possibleAnswers) if ans['isCorrect']]
-        if not correct_indices:
-            continue
-        selected = resolve_selected_index(raw_answer, question.possibleAnswers)
-        if selected is None:
-            continue
-        if selected in correct_indices:
-            score += 1
+    score = data.get('score')
+    if score is None:
+        score = 0
+        for i, raw_answer in enumerate(answers):
+            if i >= len(question_ids):
+                break
+            qid = question_ids[i]
+            question = get_question_by_id(qid)
+            if not question:
+                continue
+            correct_indices = [idx for idx, ans in enumerate(question.possibleAnswers) if ans['isCorrect']]
+            if not correct_indices:
+                continue
+            selected = resolve_selected_index(raw_answer, question.possibleAnswers)
+            if selected is None:
+                continue
+            if selected in correct_indices:
+                score += 1
 
     conn = sqlite3.connect(DB_PATH, timeout=5)
     cur = conn.cursor()
@@ -315,6 +317,20 @@ def delete_question_by_position_route():
     except Exception:
         return jsonify({"error": "Not found"}), 404
     
+@app.route('/questions/all', methods=['GET'])
+def get_all_questions():
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM Question ORDER BY position ASC")
+    rows = cur.fetchall()
+    conn.close()
+    questions = []
+    for row in rows:
+        q = get_question_by_id(row[0])
+        if q:
+            questions.append(q.to_json())
+    return jsonify(questions),200
+
 def resolve_selected_index(raw, answers_list):
     if not answers_list:
         return None

@@ -13,6 +13,7 @@ export default {
     window.localStorage.setItem('participationScore', participationScore);
   },
   getParticipationScore() {
-    return window.localStorage.getItem('participationScore');
+    const score = window.localStorage.getItem('participationScore');
+    return score ? parseInt(score, 10) : null;
   },
 };

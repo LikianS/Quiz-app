@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue';
 import quizApiService from '@/services/QuizApiService';
 import participationStorageService from '@/services/ParticipationStorageService';
-import ScoreDisplay from '@/components/ScoreDisplay.vue';
 
 const registeredScores = ref([]);
 const playerName = participationStorageService.getPlayerName();
@@ -18,8 +17,6 @@ onMounted(async () => {
 
 <template>
   <h1>Home page</h1>
-
-  <ScoreDisplay :playerName="playerName" :score="participationScore" />
 
   <div class="card mt-3">
     <div class="card-header">Participations précédentes</div>

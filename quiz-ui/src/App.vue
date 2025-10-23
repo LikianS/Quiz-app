@@ -10,7 +10,7 @@ import { RouterLink, RouterView } from 'vue-router';
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/login">Admin</RouterLink>
+        <RouterLink to="/login">Admin (Protected)</RouterLink>
       </nav>
     </div>
   </header>
@@ -46,8 +46,20 @@ nav a.router-link-exact-active:hover {
 
 nav a {
   display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+nav a:hover {
+  background-color: #f0f0f0; 
+  color: #007BFF;
+}
+
+nav a.router-link-exact-active {
+  font-weight: bold;
+  color: #0056b3;
 }
 
 nav a:first-of-type {

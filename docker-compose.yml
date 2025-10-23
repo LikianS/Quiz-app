@@ -1,13 +1,13 @@
 services:
   backend:
     build: ./backend
-    image: ton_dockerhub_username/quiz-backend:latest
+    image: likian/quiz-backend:latest
     ports:
       - "5000:5000"
 
   frontend:
     build: ./frontend
-    image: ton_dockerhub_username/quiz-frontend:latest
+    image: likian/quiz-frontend:latest
     ports:
       - "8080:80"
     depends_on:

@@ -1,19 +1,14 @@
-version: '3.9'
-
 services:
   backend:
-    build: ./quiz-api
+    build: ./backend
+    image: ton_dockerhub_username/quiz-backend:latest
     ports:
       - "5000:5000"
-    container_name: quiz-back
-    environment:
-      - FLASK_ENV=production
-      - FLASK_APP=app.py
 
   frontend:
-    build: ./quiz-ui
+    build: ./frontend
+    image: ton_dockerhub_username/quiz-frontend:latest
     ports:
       - "8080:80"
-    container_name: quiz-front
     depends_on:
       - backend

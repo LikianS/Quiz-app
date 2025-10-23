@@ -1,12 +1,12 @@
 services:
   backend:
-    build: ./backend
+    build: ./quiz-api
     image: likian/quiz-backend:latest
     ports:
       - "5000:5000"
 
   frontend:
-    build: ./frontend
+    build: ./quiz-ui
     image: likian/quiz-frontend:latest
     ports:
       - "8080:80"

@@ -1,1 +1,1 @@
-![Tests](https://github.com/<ton_user>/<ton_repo>/actions/workflows/test.yml/badge.svg)
+[![Tests](https://github.com/LikianS/Quiz-app/actions/workflows/test.yml/badge.svg)](https://github.com/LikianS/Quiz-app/actions/workflows/test.yml)

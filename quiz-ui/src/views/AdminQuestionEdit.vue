@@ -2,18 +2,25 @@
   <div>
     <h2>Éditer la question</h2>
     <form @submit.prevent="saveQuestion">
+ 
       <div>
         <label>Position :</label>
         <input type="number" v-model="question.position" />
       </div>
+
+
       <div>
         <label>Titre :</label>
         <input type="text" v-model="question.title" />
       </div>
+
+    
       <div>
         <label>Intitulé :</label>
-        <input type="text" v-model="question.intitule" />
+        <textarea v-model="question.text" rows="3"></textarea>
       </div>
+
+
       <div>
         <label>Image :</label>
         <input type="file" @change="onImageChange" />
@@ -21,14 +28,24 @@
           <img :src="imagePreview" alt="aperçu" style="width:100px;" />
         </div>
       </div>
+
       <div>
         <p>Réponses :</p>
         <div v-for="(answer, idx) in answers" :key="idx" style="margin-bottom:8px;">
-          <input type="text" v-model="answers[idx]" placeholder="Réponse" />
-          <input type="checkbox" :checked="correctAnswerIndex === idx" @change="setCorrect(idx)" />
+          <input
+            type="text"
+            v-model="answers[idx].text"
+            placeholder="Intitulé de la réponse"
+          />
+          <input
+            type="checkbox"
+            :checked="correctAnswerIndex === idx"
+            @change="setCorrect(idx)"
+          />
           <span>Bonne réponse</span>
         </div>
       </div>
+
       <button type="submit" style="margin-right:10px;">Sauvegarder</button>
       <button type="button" @click="cancelEdit">Annuler</button>
     </form>
@@ -43,25 +60,41 @@ const router = useRouter()
 const route = useRoute()
 const questionId = route.params.id
 
-const question = ref({ position: 1, title: '', intitule: '' })
-const answers = ref(['', '', '', ''])
-const correctAnswerIndex = ref(0)
-const imagePreview = ref(null)
-const imageFile = ref(null)
+const question = ref({ position: 1, title: '', text: '' })
+const answers = ref([{ text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }, { text: '', isCorrect: false }]) 
+const correctAnswerIndex = ref(0) 
+const imagePreview = ref(null) 
+const imageFile = ref(null) 
 
 onMounted(async () => {
-  const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`)
-  if (res.ok) {
-    const data = await res.json()
-    question.value = { ...data, position: data.position || 1 }
-    answers.value = typeof data.answers === 'string' ? JSON.parse(data.answers) : data.answers
-    correctAnswerIndex.value = data.correctAnswerIndex ?? 0
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`)
+    if (res.ok) {
+      const data = await res.json()
+      console.log(data) 
+      question.value = { 
+        position: data.position || 1, 
+        title: data.title || '', 
+        text: data.text || '' 
+      }
+      answers.value = data.possibleAnswers || []
+      correctAnswerIndex.value = answers.value.findIndex(answer => answer.isCorrect)
+      imagePreview.value = data.image || null
+    } else {
+      console.error('Erreur lors de la récupération de la question')
+    }
+  } catch (error) {
+    console.error('Erreur de connexion au serveur', error)
   }
 })
 
 function setCorrect(idx) {
   correctAnswerIndex.value = idx
+  answers.value.forEach((answer, index) => {
+    answer.isCorrect = index === idx
+  })
 }
+
 
 function onImageChange(e) {
   const file = e.target.files[0]
@@ -72,21 +105,49 @@ function onImageChange(e) {
 }
 
 async function saveQuestion() {
-  const payload = {
-    ...question.value,
-    answers: answers.value,
-    correctAnswerIndex: correctAnswerIndex.value
+  try {
+    const payload = {
+      ...question.value,
+      possibleAnswers: answers.value,
+    };
+
+
+    if (imageFile.value) {
+      const formData = new FormData();
+      formData.append('image', imageFile.value);
+      formData.append('data', JSON.stringify(payload));
+
+      const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error('Erreur lors de la sauvegarde de la question');
+      }
+    } else {
+      const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error('Erreur lors de la sauvegarde de la question');
+      }
+    }
+
+    alert('Question sauvegardée avec succès');
+    router.push('/admin'); 
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde de la question', error);
+    alert('Une erreur est survenue lors de la sauvegarde');
   }
-  await fetch(`http://127.0.0.1:5000/questions/${questionId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  router.push('/admin')
 }
 
+
 function cancelEdit() {
-  router.push('/admin')
+  router.push('/admin') 
 }
 </script>
 
@@ -98,31 +159,39 @@ h2 {
 }
 form {
   border: 1px solid #aaa;
-  padding: 15px;
-  border-radius: 6px;
-  background: #fafafa;
-  max-width: 400px;
-  margin: 0 auto;
+  padding: 20px;
+  border-radius: 8px;
+  background: #f9f9f9;
+  max-width: 500px;
+  margin: 20px auto;
 }
 label {
   font-size: 14px;
 }
-input[type="text"], input[type="number"] {
-  margin-bottom: 8px;
-  padding: 4px;
-  border: 1px solid #bbb;
-  border-radius: 3px;
-  width: 90%;
+textarea {
+  margin-bottom: 15px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+}
+input[type="text"], input[type="number"], input[type="file"] {
+  margin-bottom: 15px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
 }
 button {
-  background: #eee;
-  border: 1px solid #bbb;
-  border-radius: 3px;
-  padding: 6px 12px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 15px;
   cursor: pointer;
 }
 button:hover {
-  background: #ddd;
+  background: #0056b3;
 }
 img {
   margin-top: 5px;

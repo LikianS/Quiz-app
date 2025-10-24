@@ -1,5 +1,5 @@
 <template>
-    <div class="question-detail-container">
+    <div class="question-detail-container" v-if="question">
         <h2>Détail de la Question</h2>
         <div class="question-actions">
             <button @click="goToEditQuestion" class="edit-button">Éditer</button>
@@ -7,23 +7,26 @@
         </div>
         <div class="question-content">
             <h3>{{ question.title }}</h3>
-            <p>{{ question.intitule }}</p>
+            <p>{{ question.text }}</p>
             <ul>
                 <li
-                    v-for="(answer, index) in question.answers"
+                    v-for="(answer, index) in question.possibleAnswers"
                     :key="index"
-                    :class="{ correct: index === question.correctAnswerIndex }"
+                    :class="{ correct: answer.isCorrect }"
                 >
                     <input
                         type="radio"
                         :name="'answer-' + question.id"
-                        :checked="index === question.correctAnswerIndex"
+                        :checked="answer.isCorrect"
                         disabled
                     />
-                    {{ answer }}
+                    {{ answer.text }}
                 </li>
             </ul>
         </div>
+    </div>
+    <div v-else>
+        <p>Chargement des données...</p>
     </div>
 </template>
 
@@ -34,15 +37,19 @@ import { useRouter, useRoute } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 const question = ref(null)
-const answers = ref([])
-const questionId = route.params.id
+const questionId = String(route.params.id)
 
 onMounted(async () => {
-  const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`)
-  if (res.ok) {
-    const data = await res.json()
-    question.value = data
-    answers.value = typeof data.answers === 'string' ? JSON.parse(data.answers) : data.answers
+  try {
+    
+    const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`)
+    if (res.ok) {
+      question.value = await res.json()
+    } else {
+      console.error('Erreur lors de la récupération de la question')
+    }
+  } catch (error) {
+    console.error('Erreur de connexion au serveur', error)
   }
 })
 
@@ -51,13 +58,22 @@ function goToEditQuestion() {
 }
 
 async function deleteQuestion() {
-  await fetch(`http://127.0.0.1:5000/questions/${questionId}`, { method: 'DELETE' })
-  router.push('/admin')
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`, { method: 'DELETE' })
+    
+    if (res.ok) {
+      alert('Question supprimée avec succès')
+      router.push('/admin')
+    } else {
+      alert('Erreur lors de la suppression de la question')
+    }
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la question', error)
+  }
 }
 </script>
 
 <style scoped>
-
 .question-detail-container {
     max-width: 600px;
     margin: 40px auto;
@@ -67,7 +83,6 @@ async function deleteQuestion() {
     background: #f9f9f9;
     font-family: sans-serif;
 }
-
 
 h2 {
     font-size: 24px;
@@ -108,7 +123,6 @@ h2 {
     background-color: #c82333;
 }
 
-
 .question-content h3 {
     font-size: 20px;
     margin-bottom: 10px;
@@ -120,7 +134,6 @@ h2 {
     margin-bottom: 20px;
     color: #555;
 }
-
 
 ul {
     list-style: none;

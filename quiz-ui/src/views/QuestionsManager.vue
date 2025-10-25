@@ -6,7 +6,37 @@ const progressPercent = computed(() => {
     ? Math.round((currentQuestionPosition.value - 1) / totalNumberOfQuestion.value * 100)
     : 0;
 });
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
+import CircularTimer from '../components/CircularTimer.vue';
+// TIMER & SCORE PONDÉRÉ
+const questionTimeLimit = 10; // secondes
+const timeLeft = ref(questionTimeLimit);
+const timerActive = ref(false);
+const timerInterval = ref(null);
+const timeUsed = ref(0);
+const weightedScore = ref(0);
+
+function startTimer() {
+  timeLeft.value = questionTimeLimit;
+  timerActive.value = true;
+  timeUsed.value = 0;
+  if (timerInterval.value) clearInterval(timerInterval.value);
+  timerInterval.value = setInterval(() => {
+    if (timeLeft.value > 0) {
+      timeLeft.value--;
+      timeUsed.value++;
+    } else {
+      timerActive.value = false;
+      clearInterval(timerInterval.value);
+      // Optionnel: passer à la question suivante automatiquement
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  timerActive.value = false;
+  clearInterval(timerInterval.value);
+}
 import QuestionDisplay from '../components/QuestionDisplay.vue';
 import quizApiService from '@/services/QuizApiService';
 import participationStorageService from '@/services/ParticipationStorageService';
@@ -31,6 +61,7 @@ async function loadQuestionByPosition(position) {
     const result = await quizApiService.getQuestion(position);
     if (result) {
       currentQuestion.value = result;
+      startTimer();
     } else {
       console.error('Question not found for position:', position);
     }
@@ -39,14 +70,22 @@ async function loadQuestionByPosition(position) {
   }
 }
 
+const isAnswered = ref(false);
+
 async function answerClickedHandler(answerIdx) {
-  if (currentQuestion.value) {
+  if (currentQuestion.value && !isAnswered.value) {
+    isAnswered.value = true;
+    stopTimer();
     answers.value[currentQuestionPosition.value - 1] = answerIdx;
     const selected = currentQuestion.value.possibleAnswers?.[answerIdx];
+    // Score pondéré : max 100 pts/question, -10 pts/sec
+    let questionScore = 0;
     if (selected && selected.isCorrect) {
       score.value++;
+      questionScore = Math.max(100 - timeUsed.value * 10, 10); // min 10 pts
+      weightedScore.value += questionScore;
       feedback.value = 'success';
-      feedbackText.value = 'Bonne réponse !';
+      feedbackText.value = `Bonne réponse ! (+${questionScore} pts)`;
     } else {
       feedback.value = 'error';
       feedbackText.value = 'Mauvaise réponse.';
@@ -55,6 +94,8 @@ async function answerClickedHandler(answerIdx) {
       position: currentQuestionPosition.value,
       answerIndex: answerIdx,
       answerText: selected ? selected.text : '',
+      timeUsed: timeUsed.value,
+      questionScore,
     };
     setTimeout(async () => {
       feedback.value = null;
@@ -62,6 +103,7 @@ async function answerClickedHandler(answerIdx) {
       if (currentQuestionPosition.value < totalNumberOfQuestion.value) {
         currentQuestionPosition.value++;
         await loadQuestionByPosition(currentQuestionPosition.value);
+        isAnswered.value = false;
       } else {
         endQuiz();
       }
@@ -74,10 +116,10 @@ function endQuiz() {
   const name = participationStorageService.getPlayerName();
 
   quizApiService
-    .submitParticipation(name, answers.value, score.value)
+    .submitParticipation(name, answers.value, weightedScore.value)
     .then((response) => {
       console.log('Participation submitted successfully:', response);
-      participationStorageService.saveParticipationScore(score.value);
+      participationStorageService.saveParticipationScore(weightedScore.value);
       quizApiService
         .getQuizInfo()
         .then((info) => {
@@ -120,7 +162,10 @@ onMounted(async () => {
               <div class="progress-bar" :style="{ width: ((currentQuestionPosition-1)/totalNumberOfQuestion*100)+'%' }"></div>
             </div>
           </div>
-          <p>Score actuel : {{ score }}</p>
+          <p>Score actuel : {{ score }}<br>Score pondéré : {{ weightedScore }}</p>
+          <div class="timer-container mb-2">
+            <CircularTimer :timeLeft="timeLeft" :duration="questionTimeLimit" :active="timerActive" />
+          </div>
           <div v-if="feedback" :class="['alert', feedback === 'success' ? 'alert-success animate__animated animate__bounceIn' : 'alert-danger animate__animated animate__shakeX']">
             {{ feedbackText }}
           </div>
@@ -132,13 +177,13 @@ onMounted(async () => {
           >
             <div v-if="currentQuestion" :key="currentQuestion.id">
               <h3 class="mb-3">{{ currentQuestion.title }}</h3>
-              <QuestionDisplay :question="currentQuestion" @answer-clicked="answerClickedHandler" />
+              <QuestionDisplay :question="currentQuestion" :isAnswered="isAnswered" @answer-clicked="answerClickedHandler" />
             </div>
           </Transition>
         </div>
         <div v-else>
           <h2>Quiz terminé !</h2>
-          <p>Votre score : {{ score }}</p>
+          <p>Votre score pondéré : {{ weightedScore }}</p>
         </div>
       </div>
     </div>

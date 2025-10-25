@@ -27,17 +27,9 @@ export default {
   },
   async updateQuestion(id, payload, imageFile) {
     const token = localStorage.getItem('token');
-    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append('image', imageFile);
-      formData.append('data', JSON.stringify(payload));
-      const response = await axios.put(`${API_URL}/questions/${id}`, formData, config);
-      return response.data;
-    } else {
-      const response = await axios.put(`${API_URL}/questions/${id}`, payload, config);
-      return response.data;
-    }
+    const config = token ? { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } } : { headers: { 'Content-Type': 'application/json' } };
+    const response = await axios.put(`${API_URL}/questions/${id}`, payload, config);
+    return response.data;
   },
   async loginAdmin(password) {
     const response = await axios.post(`${API_URL}/login`, { password });

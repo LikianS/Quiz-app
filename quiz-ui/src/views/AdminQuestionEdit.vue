@@ -96,22 +96,41 @@ function onImageChange(e) {
   if (file) {
     imageFile.value = file
     imagePreview.value = URL.createObjectURL(file)
+    toBase64(file).then(base64 => {
+      imageFile.value.base64 = base64;
+    });
   }
 }
 
 async function saveQuestion() {
   try {
+    let imageBase64 = null;
+    if (imageFile.value && imageFile.value.base64) {
+      imageBase64 = imageFile.value.base64;
+    } else {
+      imageBase64 = imagePreview.value;
+    }
     const payload = {
       ...question.value,
+      image: imageBase64,
       possibleAnswers: answers.value,
-    }
-    await QuizApiService.updateQuestion(questionId, payload, imageFile.value)
+    };
+    await QuizApiService.updateQuestion(questionId, payload)
     alert('Question sauvegardée avec succès')
     router.push('/admin') 
   } catch (error) {
     console.error('Erreur lors de la sauvegarde de la question', error)
     alert('Une erreur est survenue lors de la sauvegarde')
   }
+}
+
+async function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
 }
 
 function cancelEdit() {

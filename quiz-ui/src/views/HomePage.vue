@@ -2,10 +2,24 @@
 import { ref, onMounted } from 'vue';
 import quizApiService from '@/services/QuizApiService';
 import participationStorageService from '@/services/ParticipationStorageService';
+import { useRoute } from 'vue-router';
+
 
 const registeredScores = ref([]);
 const playerName = participationStorageService.getPlayerName();
 const participationScore = participationStorageService.getParticipationScore();
+
+const route = useRoute();
+const challenge = ref(null);
+onMounted(() => {
+  const params = route.query;
+  if (params.challenge && params.player && params.score) {
+    challenge.value = {
+      player: params.player,
+      score: Number(params.score)
+    };
+  }
+});
 
 onMounted(async () => {
   const result = await quizApiService.getQuizInfo();
@@ -16,7 +30,12 @@ onMounted(async () => {
 </script>
 
 <template>
+
   <h1>Home page</h1>
+  <div v-if="challenge" class="alert alert-warning mt-3">
+    <strong>Défi :</strong> {{ challenge.player }} a obtenu le score <b>{{ challenge.score }}</b>.<br>
+    Tente de battre son score en lançant le quiz !
+  </div>
 
   <div class="card mt-3">
     <div class="card-header">Participations précédentes</div>

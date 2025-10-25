@@ -1,6 +1,6 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { RouterLink, RouterView, useRouter } from 'vue-router';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 
 import clickSound from '@/assets/clickvalide.mp3';
 import emptyClickSound from '@/assets/clickdenied.mp3';
@@ -10,6 +10,14 @@ const clickAudio = ref(null);
 const emptyClickAudio = ref(null);
 const bgMusic = ref(null);
 const volume = ref(1);
+const router = useRouter();
+
+const token = ref(localStorage.getItem('token'));
+const isAdmin = ref(!!token.value);
+
+watch(token, (val) => {
+  isAdmin.value = !!val;
+});
 
 function setVolume() {
   if (clickAudio.value) clickAudio.value.volume = volume.value;
@@ -33,13 +41,27 @@ function playClickSound(e) {
   }
 }
 
+function logoutAdmin() {
+  localStorage.removeItem('token');
+  token.value = null;
+  router.push('/');
+}
+
 onMounted(() => {
   window.addEventListener('click', playClickSound);
   setVolume();
 
-  if (bgMusic.value && bgMusic.value.paused) {
-    bgMusic.value.play().catch(() => {});
-  }
+  window.addEventListener('storage', () => {
+    token.value = localStorage.getItem('token');
+  });
+
+  const startMusic = () => {
+    if (bgMusic.value && bgMusic.value.paused) {
+      bgMusic.value.play().catch(() => {});
+    }
+    window.removeEventListener('click', startMusic);
+  };
+  window.addEventListener('click', startMusic, { once: true });
 });
 
 onUnmounted(() => {
@@ -53,10 +75,17 @@ onUnmounted(() => {
     <div class="wrapper">
       <nav>
         <audio ref="bgMusic" :src="themeSong" autoplay loop></audio>
-
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/login">Admin (Protected)</RouterLink>
+        <template v-if="!isAdmin">
+          <RouterLink to="/">Home</RouterLink>
+          <RouterLink to="/about">About</RouterLink>
+          <RouterLink to="/login">Admin (Protected)</RouterLink>
+        </template>
+        <template v-else>
+          <RouterLink to="/admin/questions/create">Créer</RouterLink>
+          <RouterLink to="/admin">Éditer</RouterLink>
+          <RouterLink to="/logs">Logs</RouterLink>
+          <button @click="logoutAdmin" style="margin-left: 10px">Déconnecter</button>
+        </template>
       </nav>
     </div>
   </header>

@@ -6,10 +6,11 @@
             <li
                 v-for="question in questions"
                 :key="question.id"
+                class="question-item"
                 @click="goToQuestionDetail(question.id)"
-                style="cursor: pointer; margin: 10px 0; padding: 5px; border: 1px solid black;"
             >
-                {{ question.title }}
+                <h3>{{ question.title }}</h3>
+                <p>{{ question.text }}</p>
             </li>
         </ul>
     </div>
@@ -23,12 +24,17 @@ const questions = ref([])
 const router = useRouter()
 
 onMounted(async () => {
-  const res = await fetch('http://127.0.0.1:5000/questions')
-  if (res.ok) {
-    questions.value = await res.json()
+  try {
+    const res = await fetch('http://127.0.0.1:5000/questions/all')
+    if (res.ok) {
+      questions.value = await res.json()
+    } else {
+      console.error('Erreur lors de la récupération des questions')
+    }
+  } catch (error) {
+    console.error('Erreur de connexion au serveur', error)
   }
 })
-
 
 function goToCreateQuestion() {
   router.push('/admin/questions/create')
@@ -41,23 +47,20 @@ function goToQuestionDetail(id) {
 
 <style scoped>
 .question-list-container {
-    max-width: 600px;
+    max-width: 800px;
     margin: 40px auto;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 8px;
-    background: #f5f5f5;
-    font-family: sans-serif;
-    text-align: center;
+    background: #f9f9f9;
+    font-family: Arial, sans-serif;
 }
-
 
 h2 {
-    font-size: 22px;
-    margin-bottom: 15px;
-    color: #000000;
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
 }
-
 
 button {
     margin-bottom: 20px;
@@ -74,21 +77,18 @@ button:hover {
     background-color: #0056b3;
 }
 
-
 ul {
     list-style: none;
     padding: 0;
 }
 
 li {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 10px;
     margin-bottom: 10px;
-    text-align: left;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
     transition: background-color 0.2s;
-    color: #000;
 }
 
 li:hover {

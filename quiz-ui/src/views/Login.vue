@@ -21,17 +21,24 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import QuizApiService from '@/services/QuizApiService';
 
 const password = ref('');
 const error = ref(false);
-const ADMIN_PASSWORD = 'iloveflask';
 const router = useRouter();
 
-function handleLogin() {
-  if (password.value === ADMIN_PASSWORD) {
-    error.value = false;
-    router.push('/admin');
-  } else {
+async function handleLogin() {
+  try {
+    const res = await QuizApiService.loginAdmin(password.value);
+    if (res && res.token) {
+      localStorage.setItem('token', res.token);
+      window.dispatchEvent(new Event('storage'));
+      error.value = false;
+      router.push('/admin');
+    } else {
+      error.value = true;
+    }
+  } catch (e) {
     error.value = true;
   }
 }

@@ -1,5 +1,15 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+const challengeUrl = ref("");
+
+function generateChallengeUrl() {
+  const baseUrl = window.location.origin;
+  const params = new URLSearchParams({
+    player: playerName.value,
+    score: participationScore.value
+  });
+  challengeUrl.value = `${baseUrl}/?challenge=1&${params.toString()}`;
+}
 import quizApiService from '@/services/QuizApiService';
 import participationStorageService from '@/services/ParticipationStorageService';
 import ScoreDisplay from '@/components/ScoreDisplay.vue';
@@ -55,6 +65,12 @@ onMounted(async () => {
       </div>
     </div>
 
+    <button class="btn btn-success mt-3" @click="generateChallengeUrl">Partager mon score</button>
+    <div v-if="challengeUrl" class="mt-2">
+      <input :value="challengeUrl" readonly style="width:80%" />
+      <button class="btn btn-outline-secondary ms-2" @click="() => navigator.clipboard.writeText(challengeUrl)">Copier</button>
+      <div class="text-muted mt-1">Envoie ce lien à un ami pour qu'il tente de battre ton score !</div>
+    </div>
     <router-link to="/" class="btn btn-primary mt-3">Retour à l'accueil</router-link>
   </div>
 </template>

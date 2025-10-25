@@ -48,6 +48,11 @@ const router = createRouter({
     path: '/admin/questions/create',
     name: 'AdminQuestionCreate',
     component: () => import('../views/AdminQuestionCreate.vue') 
+  },
+  {
+    path: '/logs',
+    name: 'Logs',
+    component: () => import('../views/Logs.vue')
   }
 
   ],

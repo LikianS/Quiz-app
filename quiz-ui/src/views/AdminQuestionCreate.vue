@@ -87,48 +87,42 @@ function onImageChange(e) {
 
 async function createQuestion() {
   try {
+    let imageBase64 = null;
+    if (imageFile.value) {
+      imageBase64 = await toBase64(imageFile.value);
+    }
     const payload = {
-      ...question.value,
+      position: question.value.position,
+      title: question.value.title,
+      text: question.value.text,
+      image: imageBase64,
       possibleAnswers: answers.value,
     };
-
-    if (imageFile.value) {
-      const formData = new FormData();
-      formData.append('image', imageFile.value);
-      formData.append('data', JSON.stringify(payload));
-
-      const res = await fetch('http://127.0.0.1:5000/questions', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('jwt')}`, 
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error('Erreur lors de la création de la question');
-      }
-    } else {
-      const res = await fetch('http://127.0.0.1:5000/questions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('jwt')}`, 
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error('Erreur lors de la création de la question');
-      }
+    const res = await fetch('http://127.0.0.1:5000/questions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      throw new Error('Erreur lors de la création de la question');
     }
-
     alert('Question créée avec succès');
-    router.push('/admin'); 
+    router.push('/admin');
   } catch (error) {
     console.error('Erreur lors de la création de la question', error);
     alert('Une erreur est survenue lors de la création');
   }
+async function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+}
 }
 
 

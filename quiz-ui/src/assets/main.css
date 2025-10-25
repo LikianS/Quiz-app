@@ -1,5 +1,6 @@
 /* Existing project base styles */
 @import './base.css';
+@import './animate.css';
 
 /* Tailwind layers */
 @tailwind base;

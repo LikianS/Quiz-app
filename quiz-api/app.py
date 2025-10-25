@@ -17,12 +17,15 @@ from question_repository import (
 )
 import init_db
 import json
+import log_repository
 
 DB_PATH = "DB_quiz.db"
 
 app = Flask(__name__)
 CORS(app)
 app.url_map.strict_slashes = False
+
+init_db.create_log_table()
 
 @app.route('/quiz-info', methods=['GET'])
 def GetQuizInfo():
@@ -42,8 +45,10 @@ def login():
     correct_hashed_pwd = "d278077bbfe7285a144d4b5b11adb9cf"
     if hashed_pwd == correct_hashed_pwd:
         token = build_token()
+        log_repository.insert_log("admin", "login", "/login", "success", f"token={token}")
         return jsonify({"token": token})
     else:
+        log_repository.insert_log("admin", "login", "/login", "fail", f"password={password}")
         return 'Unauthorized', 401
 
 def _safe_json():
@@ -72,12 +77,15 @@ def post_question():
     try:
         question = Question.from_json(data)
     except Exception:
+        log_repository.insert_log("admin", "create_question", "/questions", "fail", "bad request json")
         return jsonify({"error": "Bad request"}), 400
 
     try:
         qid = insert_question(question)
     except Exception as e:
+        log_repository.insert_log("admin", "create_question", "/questions", "fail", str(e))
         return jsonify({"error": str(e)}), 400
+    log_repository.insert_log("admin", "create_question", "/questions", "success", f"id={qid}")
     return jsonify({"id": qid}), 200
 
 @app.route('/questions/<int:qid>', methods=['GET'])
@@ -108,8 +116,10 @@ def delete_question(qid):
             return 'Unauthorized', 401
         question = get_question_by_id(qid)
         if not question:
+            log_repository.insert_log("admin", "delete_question", f"/questions/{qid}", "fail", "not found")
             return '', 404
         delete_question_by_id(qid)
+        log_repository.insert_log("admin", "delete_question", f"/questions/{qid}", "success", "deleted")
         return '', 204
     except Exception as e:
         print("Erreur DELETE /questions/<id> :", e)
@@ -127,6 +137,7 @@ def put_question(qid):
 
         existing = get_question_by_id(qid)
         if not existing:
+            log_repository.insert_log("admin", "edit_question", f"/questions/{qid}", "fail", "not found")
             return '', 404
 
         data = _safe_json()
@@ -151,8 +162,10 @@ def put_question(qid):
                 possibleAnswers=data.get('possibleAnswers')
             )
         except Exception as e:
+            log_repository.insert_log("admin", "edit_question", f"/questions/{qid}", "fail", str(e))
             return jsonify({"error": str(e)}), 500
 
+        log_repository.insert_log("admin", "edit_question", f"/questions/{qid}", "success", "updated")
         return '', 204
     except Exception as e:
         print("Erreur PUT /questions/<id> :", e)
@@ -167,6 +180,7 @@ def delete_all_questions_route():
     if not is_token_valid(token):
         return 'Unauthorized', 401
     delete_all_questions()
+    log_repository.insert_log("admin", "delete_all_questions", "/questions/all", "success", "all deleted")
     return '', 204
 
 @app.route('/participations/all', methods=['DELETE'])
@@ -182,6 +196,7 @@ def delete_all_participations():
     cur.execute("DELETE FROM Participation")
     conn.commit()
     conn.close()
+    log_repository.insert_log("admin", "delete_all_participations", "/participations/all", "success", "all deleted")
     return '', 204
 
 @app.route('/rebuild-db', methods=['POST'])
@@ -193,6 +208,7 @@ def rebuild_db():
     if not is_token_valid(token):
         return 'Unauthorized', 401
     init_db.create_db()
+    log_repository.insert_log("admin", "rebuild_db", "/rebuild-db", "success", "db rebuilt")
     return "Ok", 200
 
 @app.route('/participations', methods=['POST'])
@@ -241,7 +257,7 @@ def add_participation():
     cur.execute("INSERT INTO Participation (playerName, score) VALUES (?, ?)", (playerName, score))
     conn.commit()
     conn.close()
-
+    log_repository.insert_log(playerName, "add_participation", "/participations", "success", f"score={score}")
     return jsonify({"playerName": playerName, "score": score}), 200
 
 @app.route('/questions', methods=['PUT'])
@@ -270,6 +286,7 @@ def update_or_move_question_by_position():
 
     q = get_question_by_position(position)
     if not q:
+        log_repository.insert_log("admin", "edit_question_by_position", "/questions", "fail", f"position={position} not found")
         return jsonify({"error": "Not found"}), 404
 
     try:
@@ -291,8 +308,10 @@ def update_or_move_question_by_position():
                 image=image,
                 possibleAnswers=possibleAnswers
             )
+        log_repository.insert_log("admin", "edit_question_by_position", "/questions", "success", f"position={position}")
         return '', 204
     except Exception as e:
+        log_repository.insert_log("admin", "edit_question_by_position", "/questions", "fail", str(e))
         return jsonify({"error": str(e)}), 400
 
 @app.route('/questions', methods=['DELETE'])
@@ -313,8 +332,10 @@ def delete_question_by_position_route():
         return jsonify({"error": "position required"}), 400
     try:
         delete_question_by_position(data['position'])
+        log_repository.insert_log("admin", "delete_question_by_position", "/questions", "success", f"position={data['position']}")
         return '', 204
     except Exception:
+        log_repository.insert_log("admin", "delete_question_by_position", "/questions", "fail", f"position={data['position']} not found")
         return jsonify({"error": "Not found"}), 404
     
 @app.route('/questions/all', methods=['GET'])
@@ -353,6 +374,17 @@ def resolve_selected_index(raw, answers_list):
             if k in raw:
                 return resolve_selected_index(raw[k], answers_list)
     return None
+
+@app.route('/logs', methods=['GET'])
+def get_logs():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return 'Unauthorized', 401
+    token = auth_header.split(" ")[1]
+    if not is_token_valid(token):
+        return 'Unauthorized', 401
+    logs = log_repository.get_logs()
+    return jsonify(logs), 200
 
 if __name__ == "__main__":
     app.run()

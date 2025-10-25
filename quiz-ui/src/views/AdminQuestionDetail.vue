@@ -58,17 +58,26 @@ function goToEditQuestion() {
 }
 
 async function deleteQuestion() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('Vous devez être connecté en tant qu\'admin pour supprimer une question.');
+    return;
+  }
   try {
-    const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`, { method: 'DELETE' })
-    
+    const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     if (res.ok) {
-      alert('Question supprimée avec succès')
-      router.push('/admin')
+      alert('Question supprimée avec succès');
+      router.push('/admin');
     } else {
-      alert('Erreur lors de la suppression de la question')
+      alert('Erreur lors de la suppression de la question');
     }
   } catch (error) {
-    console.error('Erreur lors de la suppression de la question', error)
+    console.error('Erreur lors de la suppression de la question', error);
   }
 }
 </script>

@@ -46,8 +46,9 @@
         </div>
       </div>
 
-      <button type="submit" style="margin-right:10px;">Sauvegarder</button>
-      <button type="button" @click="cancelEdit">Annuler</button>
+  <button type="submit" style="margin-right:10px;">Sauvegarder</button>
+  <button type="button" @click="cancelEdit" style="margin-right:10px;">Annuler</button>
+  <button type="button" @click="deleteQuestion" style="background:#dc3545;">Supprimer</button>
     </form>
   </div>
 </template>
@@ -55,6 +56,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import QuizApiService from '@/services/QuizApiService'
 
 const router = useRouter()
 const route = useRoute()
@@ -68,23 +70,17 @@ const imageFile = ref(null)
 
 onMounted(async () => {
   try {
-    const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`)
-    if (res.ok) {
-      const data = await res.json()
-      console.log(data) 
-      question.value = { 
-        position: data.position || 1, 
-        title: data.title || '', 
-        text: data.text || '' 
-      }
-      answers.value = data.possibleAnswers || []
-      correctAnswerIndex.value = answers.value.findIndex(answer => answer.isCorrect)
-      imagePreview.value = data.image || null
-    } else {
-      console.error('Erreur lors de la récupération de la question')
+    const data = await QuizApiService.getQuestionById(questionId)
+    question.value = { 
+      position: data.position || 1, 
+      title: data.title || '', 
+      text: data.text || '' 
     }
+    answers.value = data.possibleAnswers || []
+    correctAnswerIndex.value = answers.value.findIndex(answer => answer.isCorrect)
+    imagePreview.value = data.image || null
   } catch (error) {
-    console.error('Erreur de connexion au serveur', error)
+    console.error('Erreur lors de la récupération de la question', error)
   }
 })
 
@@ -94,7 +90,6 @@ function setCorrect(idx) {
     answer.isCorrect = index === idx
   })
 }
-
 
 function onImageChange(e) {
   const file = e.target.files[0]
@@ -109,45 +104,31 @@ async function saveQuestion() {
     const payload = {
       ...question.value,
       possibleAnswers: answers.value,
-    };
-
-
-    if (imageFile.value) {
-      const formData = new FormData();
-      formData.append('image', imageFile.value);
-      formData.append('data', JSON.stringify(payload));
-
-      const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`, {
-        method: 'PUT',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error('Erreur lors de la sauvegarde de la question');
-      }
-    } else {
-      const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error('Erreur lors de la sauvegarde de la question');
-      }
     }
-
-    alert('Question sauvegardée avec succès');
-    router.push('/admin'); 
+    await QuizApiService.updateQuestion(questionId, payload, imageFile.value)
+    alert('Question sauvegardée avec succès')
+    router.push('/admin') 
   } catch (error) {
-    console.error('Erreur lors de la sauvegarde de la question', error);
-    alert('Une erreur est survenue lors de la sauvegarde');
+    console.error('Erreur lors de la sauvegarde de la question', error)
+    alert('Une erreur est survenue lors de la sauvegarde')
   }
 }
 
-
 function cancelEdit() {
   router.push('/admin') 
+}
+
+async function deleteQuestion() {
+  if (confirm('Voulez-vous vraiment supprimer cette question ?')) {
+    try {
+      await QuizApiService.deleteQuestion(questionId)
+      alert('Question supprimée avec succès')
+      router.push('/admin')
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la question', error)
+      alert('Une erreur est survenue lors de la suppression')
+    }
+  }
 }
 </script>
 

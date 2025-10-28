@@ -27,7 +27,7 @@ const router = useRouter()
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://127.0.0.1:5001/questions/all')
+    const res = await fetch('http://127.0.0.1:5000/questions/all')
     if (res.ok) {
       questions.value = await res.json()
     } else {

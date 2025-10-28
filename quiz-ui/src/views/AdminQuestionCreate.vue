@@ -1,53 +1,52 @@
 <template>
-  <div>
-    <h2>Créer une nouvelle question</h2>
-    <form @submit.prevent="createQuestion">
-      <div>
-        <label>Position :</label>
-        <input type="number" v-model="question.position" />
-      </div>
-      <div>
-        <label>Titre :</label>
-        <input type="text" v-model="question.title" />
+  <div class="max-w-2xl mx-auto p-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Créer une nouvelle question</h2>
+    <form @submit.prevent="createQuestion" class="space-y-6 bg-white p-6 rounded-xl shadow-md">
+
+      <div class="flex flex-col">
+        <label class="mb-1 text-gray-700 font-medium">Position :</label>
+        <input type="number" v-model="question.position" class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-main-violet"/>
       </div>
 
-      <div>
-        <label>Intitulé :</label>
-        <textarea v-model="question.text" rows="3"></textarea>
+      <div class="flex flex-col">
+        <label class="mb-1 text-gray-700 font-medium">Titre :</label>
+        <input type="text" v-model="question.title" class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-main-violet"/>
       </div>
 
+      <div class="flex flex-col">
+        <label class="mb-1 text-gray-700 font-medium">Intitulé :</label>
+        <textarea v-model="question.text" rows="3" class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-main-violet"></textarea>
+      </div>
 
-      <div>
-        <label>Image :</label>
-        <input type="file" @change="onImageChange" />
-        <div v-if="imagePreview">
-          <img :src="imagePreview" alt="aperçu" style="width:100px;" />
+      <div class="flex flex-col">
+        <label class="mb-1 text-gray-700 font-medium">Image :</label>
+        <input type="file" @change="onImageChange" class="mb-2"/>
+        <img v-if="imagePreview" :src="imagePreview" alt="aperçu" class="w-24 border border-gray-300 rounded mt-2"/>
+      </div>
+
+      <div class="flex flex-col">
+        <p class="mb-2 text-gray-700 font-medium">Réponses :</p>
+        <div v-for="(answer, idx) in answers" :key="idx" class="flex items-center gap-3 mb-2">
+          <input type="text" v-model="answers[idx].text" placeholder="Intitulé de la réponse" class="flex-1 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-main-violet"/>
+          <label class="flex items-center gap-1">
+            <input type="checkbox" :checked="correctAnswerIndex === idx" @change="setCorrect(idx)" class="w-4 h-4"/>
+            <span class="text-gray-600">Bonne réponse</span>
+          </label>
         </div>
       </div>
 
-   
-      <div>
-        <p>Réponses :</p>
-        <div v-for="(answer, idx) in answers" :key="idx" style="margin-bottom:8px;">
-          <input
-            type="text"
-            v-model="answers[idx].text"
-            placeholder="Intitulé de la réponse"
-          />
-          <input
-            type="checkbox"
-            :checked="correctAnswerIndex === idx"
-            @change="setCorrect(idx)"
-          />
-          <span>Bonne réponse</span>
-        </div>
-      </div>
 
-      <button type="submit" style="margin-right:10px;">Créer</button>
-      <button type="button" @click="cancelCreate">Annuler</button>
+    
+      <div class="flex gap-4">
+        <button type="submit" class="appearance-none focus:outline-none bg-main-violet text-white px-4 py-2 rounded-md hover:bg-[#A48FD0] transition">Créer</button>
+        <button type="button" @click="cancelCreate" class="appearance-none focus:outline-none bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Annuler</button>
+        </div>
+
+
     </form>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue';
@@ -130,51 +129,3 @@ function cancelCreate() {
   router.push('/admin'); 
 }
 </script>
-
-<style scoped>
-h2 {
-  color: #333;
-  font-size: 20px;
-  margin-bottom: 15px;
-}
-form {
-  border: 1px solid #aaa;
-  padding: 20px;
-  border-radius: 8px;
-  background: #f9f9f9;
-  max-width: 500px;
-  margin: 20px auto;
-}
-label {
-  font-size: 14px;
-}
-textarea {
-  margin-bottom: 15px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-}
-input[type="text"], input[type="number"], input[type="file"] {
-  margin-bottom: 15px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-}
-button {
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-button:hover {
-  background: #0056b3;
-}
-img {
-  margin-top: 5px;
-  border: 1px solid #ccc;
-}
-</style>

@@ -24,36 +24,36 @@ const router = createRouter({
       name: 'ScorePage',
       component: () => import('../views/ScorePage.vue'),
     },
-  {
-    path: '/login',
-    name: 'Login',
-    component: () => import('../views/Login.vue')
-  },
-  {
-    path: '/admin',
-    name: 'AdminQuestionList',
-    component: () => import('../views/AdminQuestionList.vue')
-  },
-  {
-    path: '/admin/questions/:id',
-    name: 'AdminQuestionDetail',
-    component: () => import('../views/AdminQuestionDetail.vue')
-  },
-  {
-    path: '/admin/questions/:id/edit',
-    name: 'AdminQuestionEdit',
-    component: () => import('../views/AdminQuestionEdit.vue')
-  },
-  {
-    path: '/admin/questions/create',
-    name: 'AdminQuestionCreate',
-    component: () => import('../views/AdminQuestionCreate.vue') 
-  },
-  {
-    path: '/logs',
-    name: 'Logs',
-    component: () => import('../views/Logs.vue')
-  }
+    {
+      path: '/login',
+      name: 'Login',
+      component: () => import('../views/Login.vue')
+    },
+    {
+      path: '/admin',
+      name: 'AdminQuestionList',
+      component: () => import('../views/AdminQuestionList.vue')
+    },
+    {
+      path: '/admin/questions/:id',
+      name: 'AdminQuestionDetail',
+      component: () => import('../views/AdminQuestionDetail.vue')
+    },
+    {
+      path: '/admin/questions/:id/edit',
+      name: 'AdminQuestionEdit',
+      component: () => import('../views/AdminQuestionEdit.vue')
+    },
+    {
+      path: '/admin/questions/create',
+      name: 'AdminQuestionCreate',
+      component: () => import('../views/AdminQuestionCreate.vue')
+    },
+    {
+      path: '/logs',
+      name: 'Logs',
+      component: () => import('../views/Logs.vue')
+    }
 
   ],
 });

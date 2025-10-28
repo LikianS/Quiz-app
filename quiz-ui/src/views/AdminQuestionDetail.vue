@@ -1,33 +1,28 @@
 <template>
-    <div class="question-detail-container" v-if="question">
-        <h2>Détail de la Question</h2>
-        <div class="question-actions">
-            <button @click="goToEditQuestion" class="edit-button">Éditer</button>
-            <button @click="deleteQuestion" class="delete-button">Supprimer</button>
-        </div>
-        <div class="question-content">
-            <h3>{{ question.title }}</h3>
-            <p>{{ question.text }}</p>
-            <ul>
-                <li
-                    v-for="(answer, index) in question.possibleAnswers"
-                    :key="index"
-                    :class="{ correct: answer.isCorrect }"
-                >
-                    <input
-                        type="radio"
-                        :name="'answer-' + question.id"
-                        :checked="answer.isCorrect"
-                        disabled
-                    />
-                    {{ answer.text }}
-                </li>
-            </ul>
-        </div>
+  <div class="max-w-3xl mx-auto mt-12 p-6 bg-white rounded-xl shadow-md" v-if="question">
+    <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Détail de la Question</h2>
+
+    <div class="flex justify-end gap-4 mb-6">
+      <button @click="goToEditQuestion" class="bg-main-violet text-white px-4 py-2 rounded-md hover:bg-[#A48FD0] transition">Éditer</button>
+      <button @click="deleteQuestion" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Supprimer</button>
     </div>
-    <div v-else>
-        <p>Chargement des données...</p>
+
+    <div class="space-y-4">
+      <h3 class="text-xl font-semibold text-gray-700">{{ question.title }}</h3>
+      <p class="text-gray-600">{{ question.text }}</p>
+
+      <ul class="space-y-2">
+        <li v-for="(answer, index) in question.possibleAnswers" :key="index" :class="['flex items-center p-3 border rounded-md', answer.isCorrect ? 'border-green-500 bg-green-50 font-semibold text-green-700' : 'border-gray-200 bg-white']">
+          <input type="radio" :name="'answer-' + question.id" :checked="answer.isCorrect" disabled class="mr-3"/>
+          {{ answer.text }}
+        </li>
+      </ul>
     </div>
+  </div>
+
+  <div v-else class="text-center text-gray-500 mt-12">
+    <p>Chargement des données...</p>
+  </div>
 </template>
 
 <script setup>
@@ -41,7 +36,6 @@ const questionId = String(route.params.id)
 
 onMounted(async () => {
   try {
-    
     const res = await fetch(`http://127.0.0.1:5000/questions/${questionId}`)
     if (res.ok) {
       question.value = await res.json()
@@ -81,86 +75,3 @@ async function deleteQuestion() {
   }
 }
 </script>
-
-<style scoped>
-.question-detail-container {
-    max-width: 600px;
-    margin: 40px auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #f9f9f9;
-    font-family: sans-serif;
-}
-
-h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    color: #333;
-    text-align: center;
-}
-
-.question-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.edit-button {
-    padding: 8px 16px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.edit-button:hover {
-    background-color: #0056b3;
-}
-
-.delete-button {
-    padding: 8px 16px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.delete-button:hover {
-    background-color: #c82333;
-}
-
-.question-content h3 {
-    font-size: 20px;
-    margin-bottom: 10px;
-    color: #444;
-}
-
-.question-content p {
-    font-size: 16px;
-    margin-bottom: 20px;
-    color: #555;
-}
-
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-li {
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-}
-
-input[type='radio'] {
-    margin-right: 10px;
-}
-
-.correct {
-    font-weight: bold;
-    color: green;
-}
-</style>

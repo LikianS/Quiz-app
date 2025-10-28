@@ -7,21 +7,20 @@ const username = ref('');
 const router = useRouter();
 
 function launchNewQuiz() {
-  console.log("Launch new quiz with", username.value);
   participationStorageService.savePlayerName(username.value);
   router.push('/questions');
 }
 </script>
 
 <template>
-  <div class="container mt-5" style="max-width: 400px">
-    <h1 class="mb-4">Nouveau Quiz</h1>
-    <form @submit.prevent="launchNewQuiz">
-      <div class="mb-3">
-        <label for="username" class="form-label">Nom du joueur</label>
-        <input id="username" type="text" class="form-control" v-model="username" required />
-      </div>
-      <button type="submit" class="btn btn-primary w-100">Commencer</button>
-    </form>
-  </div>
+  <section class="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-6">
+    <div class="bg-white shadow-lg rounded-xl p-10 max-w-md w-full">
+      <h1 class="text-3xl md:text-4xl font-bold text-center mb-6">Nouveau Quiz</h1>
+      <p class="text-center text-gray-600 mb-6">Entrez votre nom pour commencer et testez vos connaissances en Intelligence Artificielle.</p>
+      <form @submit.prevent="launchNewQuiz" class="flex flex-col gap-4">
+        <input id="username" type="text" v-model="username" placeholder="Votre nom" required class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-violet focus:border-main-violet transition"/>
+        <button type="submit" class="w-full py-3 bg-main-violet text-white font-semibold rounded-lg hover:bg-main-dark transition">Commencer le quiz</button>
+      </form>
+    </div>
+  </section>
 </template>

@@ -1,57 +1,51 @@
 <template>
-  <div>
-    <h2>Éditer la question</h2>
-    <form @submit.prevent="saveQuestion">
- 
-      <div>
-        <label>Position :</label>
-        <input type="number" v-model="question.position" />
+  <div class="max-w-xl mx-auto mt-10 p-6 bg-gray-50 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Éditer la question</h2>
+
+    <form @submit.prevent="saveQuestion" class="space-y-6">
+
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Position :</label>
+          <input type="number" v-model="question.position" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-main-violet focus:border-main-violet"/>
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Titre :</label>
+          <input type="text" v-model="question.title" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-main-violet focus:border-main-violet"/>
+        </div>
       </div>
-
-
       <div>
-        <label>Titre :</label>
-        <input type="text" v-model="question.title" />
+        <label class="block text-sm font-medium text-gray-700 mb-1">Intitulé :</label>
+        <textarea v-model="question.text" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-main-violet focus:border-main-violet"></textarea>
       </div>
-
-    
       <div>
-        <label>Intitulé :</label>
-        <textarea v-model="question.text" rows="3"></textarea>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Image :</label>
+        <input type="file" @change="onImageChange" class="block w-full text-gray-700" />
+        <div v-if="imagePreview" class="mt-2">
+          <img :src="imagePreview" alt="aperçu" class="w-full border border-gray-300 rounded-md" />
+        </div>
       </div>
-
-
       <div>
-        <label>Image :</label>
-        <input type="file" @change="onImageChange" />
-        <div v-if="imagePreview">
-          <img :src="imagePreview" alt="aperçu" style="width:100px;" />
+        <p class="text-gray-700 font-medium mb-2">Réponses :</p>
+        <div v-for="(answer, idx) in answers" :key="idx" class="flex items-center gap-2 mb-2">
+          <input type="text" v-model="answers[idx].text" placeholder="Intitulé de la réponse" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-main-violet focus:border-main-violet"/>
+          <label class="flex items-center gap-1">
+            <input type="checkbox" :checked="correctAnswerIndex === idx" @change="setCorrect(idx)" class="w-4 h-4 text-main-violet border-gray-300 rounded"/>
+            <span class="text-gray-600 text-sm">Bonne réponse</span>
+          </label>
         </div>
       </div>
 
-      <div>
-        <p>Réponses :</p>
-        <div v-for="(answer, idx) in answers" :key="idx" style="margin-bottom:8px;">
-          <input
-            type="text"
-            v-model="answers[idx].text"
-            placeholder="Intitulé de la réponse"
-          />
-          <input
-            type="checkbox"
-            :checked="correctAnswerIndex === idx"
-            @change="setCorrect(idx)"
-          />
-          <span>Bonne réponse</span>
-        </div>
+      <div class="flex gap-4">
+        <button type="submit" class="bg-main-violet text-white px-4 py-2 rounded-md hover:bg-[#A48FD0] transition">Sauvegarder</button>
+        <button type="button" @click="cancelEdit" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Annuler</button>
+        <button type="button" @click="deleteQuestion" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Supprimer</button>
       </div>
 
-  <button type="submit" style="margin-right:10px;">Sauvegarder</button>
-  <button type="button" @click="cancelEdit" style="margin-right:10px;">Annuler</button>
-  <button type="button" @click="deleteQuestion" style="background:#dc3545;">Supprimer</button>
     </form>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -150,51 +144,3 @@ async function deleteQuestion() {
   }
 }
 </script>
-
-<style scoped>
-h2 {
-  color: #333;
-  font-size: 20px;
-  margin-bottom: 15px;
-}
-form {
-  border: 1px solid #aaa;
-  padding: 20px;
-  border-radius: 8px;
-  background: #f9f9f9;
-  max-width: 500px;
-  margin: 20px auto;
-}
-label {
-  font-size: 14px;
-}
-textarea {
-  margin-bottom: 15px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-}
-input[type="text"], input[type="number"], input[type="file"] {
-  margin-bottom: 15px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-}
-button {
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-button:hover {
-  background: #0056b3;
-}
-img {
-  margin-top: 5px;
-  border: 1px solid #ccc;
-}
-</style>

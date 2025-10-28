@@ -1,31 +1,34 @@
 <template>
-  <div class="logs-container">
-    <h2>Logs d'administration</h2>
-    <div v-if="loading">Chargement...</div>
+  <div class="max-w-5xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">Logs d'administration</h2>
+    <div v-if="loading" class="text-gray-500">Chargement...</div>
+
     <div v-else>
-      <table v-if="logs.length" class="logs-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Utilisateur</th>
-            <th>Action</th>
-            <th>Endpoint</th>
-            <th>Status</th>
-            <th>Détails</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="log in logs" :key="log.timestamp + log.action + log.endpoint">
-            <td>{{ log.timestamp }}</td>
-            <td>{{ log.user }}</td>
-            <td>{{ log.action }}</td>
-            <td>{{ log.endpoint }}</td>
-            <td>{{ log.status }}</td>
-            <td>{{ log.details }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-else>Aucun log à afficher.</div>
+      <div v-if="logs.length" class="overflow-x-auto">
+        <table class="min-w-full border border-gray-200 rounded-lg">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-gray-700 uppercase text-sm">Date</th>
+              <th class="px-4 py-2 text-left text-gray-700 uppercase text-sm">Utilisateur</th>
+              <th class="px-4 py-2 text-left text-gray-700 uppercase text-sm">Action</th>
+              <th class="px-4 py-2 text-left text-gray-700 uppercase text-sm">Endpoint</th>
+              <th class="px-4 py-2 text-left text-gray-700 uppercase text-sm">Status</th>
+              <th class="px-4 py-2 text-left text-gray-700 uppercase text-sm">Détails</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="log in logs" :key="log.timestamp + log.action + log.endpoint" class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-2 text-gray-800">{{ log.timestamp }}</td>
+              <td class="px-4 py-2 text-gray-800">{{ log.user }}</td>
+              <td class="px-4 py-2 text-gray-800">{{ log.action }}</td>
+              <td class="px-4 py-2 text-gray-800">{{ log.endpoint }}</td>
+              <td class="px-4 py-2 text-gray-800">{{ log.status }}</td>
+              <td class="px-4 py-2 text-gray-800 break-words max-w-xs">{{ log.details }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-else class="text-gray-500 mt-4">Aucun log à afficher.</div>
     </div>
   </div>
 </template>
@@ -49,45 +52,3 @@ onMounted(async () => {
   }
 });
 </script>
-
-<style scoped>
-
-.logs-container {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 24px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  color: #111;
-}
-.logs-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
-  color: #111;
-  font-size: 15px;
-}
-.logs-table th, .logs-table td {
-  border: 1px solid #eee;
-  padding: 8px 12px;
-  text-align: left;
-  color: #111;
-}
-.logs-table td:last-child {
-  max-width: 220px;
-  word-break: break-word;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
-.logs-table th {
-  background: #f7f7f7;
-  color: #111;
-}
-.logs-table tr:nth-child(even) {
-  background: #fafafa;
-}
-.logs-table tr:hover {
-  background: #e6e6e6;
-}
-</style>

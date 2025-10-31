@@ -35,7 +35,7 @@ onMounted(async () => {
 
 <template class="w-full min-w-screen">
 
-  <section class="w-screen h-screen relative overflow-hidden">
+  <section class="h-screen relative overflow-hidden">
     <div class="absolute inset-0 bg-cover bg-center animate-zoom-slow" :style="{ backgroundImage: `url(${backgroundImage})` }"></div>
     <div class="absolute inset-0 bg-black bg-opacity-50"></div>
 

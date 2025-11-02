@@ -44,8 +44,6 @@ jobs:
         if: always()
         run: |
           docker compose -f docker-compose.yml down
-          # remove the temporary .env file we created from secrets
-          rm -f quiz-api/.env || true
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -55,3 +53,7 @@ jobs:
 
       - name: Push Docker images
         run: docker compose push
+
+      - name: Cleanup temporary secrets file
+        if: always()
+        run: rm -f quiz-api/.env || true

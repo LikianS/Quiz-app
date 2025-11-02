@@ -7,6 +7,10 @@ export default {
     const response = await axios.get(`${API_URL}/quiz-info`);
     return response.data;
   },
+  async getAllQuestions() {
+    const response = await axios.get(`${API_URL}/questions/all`);
+    return response.data;
+  },
   async getQuestion(position) {
     const response = await axios.get(`${API_URL}/questions?position=${position}`);
     return response.data;
@@ -24,6 +28,18 @@ export default {
       score,
     });
     return response.data;
+  },
+  async generateQuestions(payload) {
+    const token = localStorage.getItem('token')
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+    const response = await axios.post(`${API_URL}/questions/generate`, payload, config)
+    return response.data
+  },
+  async insertQuestion(payload) {
+    const token = localStorage.getItem('token')
+    const config = token ? { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } } : { headers: { 'Content-Type': 'application/json' } }
+    const response = await axios.post(`${API_URL}/questions`, payload, config)
+    return response.data
   },
   async updateQuestion(id, payload, imageFile) {
     const token = localStorage.getItem('token');

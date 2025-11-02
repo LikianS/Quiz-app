@@ -8,8 +8,7 @@ const progressPercent = computed(() => {
 });
 import { ref, onMounted, computed, watch } from 'vue';
 import CircularTimer from '../components/CircularTimer.vue';
-// TIMER & SCORE PONDÉRÉ
-const questionTimeLimit = 10; // secondes
+const questionTimeLimit = 10;
 const timeLeft = ref(questionTimeLimit);
 const timerActive = ref(false);
 const timerInterval = ref(null);
@@ -22,13 +21,12 @@ function startTimer() {
   timeUsed.value = 0;
   if (timerInterval.value) clearInterval(timerInterval.value);
   timerInterval.value = setInterval(() => {
-    if (timeLeft.value > 0) {
+      if (timeLeft.value > 0) {
       timeLeft.value--;
       timeUsed.value++;
     } else {
       timerActive.value = false;
       clearInterval(timerInterval.value);
-      // Optionnel: passer à la question suivante automatiquement
     }
   }, 1000);
 }
@@ -78,7 +76,6 @@ async function answerClickedHandler(answerIdx) {
     stopTimer();
     answers.value[currentQuestionPosition.value - 1] = answerIdx;
     const selected = currentQuestion.value.possibleAnswers?.[answerIdx];
-    // Score pondéré : max 100 pts/question, -10 pts/sec
     let questionScore = 0;
     if (selected && selected.isCorrect) {
       score.value++;
@@ -152,38 +149,51 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container mt-5">
-    <div class="row g-4">
-      <div class="col-lg-8">
-        <div v-if="!isQuizFinished">
-          <div class="d-flex align-items-center mb-2">
-            <span>Question {{ currentQuestionPosition }} / {{ totalNumberOfQuestion }}</span>
-            <div class="progress flex-grow-1 ms-3" style="height: 18px;">
-              <div class="progress-bar" :style="{ width: ((currentQuestionPosition-1)/totalNumberOfQuestion*100)+'%' }"></div>
+  <div class="min-h-[calc(100vh-rem)] flex items-center justify-center pb-12">
+    <div class="container px-4">
+      <div class="row g-4">
+        <div class="w-full lg:w-4/5 mx-auto">
+          <div v-if="!isQuizFinished">
+            <div class="d-flex align-items-center mb-2">
+              <span>Question {{ currentQuestionPosition }} / {{ totalNumberOfQuestion }}</span>
+              <div class="progress flex-grow-1 ms-3" style="height: 18px;">
+                <div class="progress-bar" :style="{ width: ((currentQuestionPosition-1)/totalNumberOfQuestion*100)+'%' }"></div>
+              </div>
             </div>
-          </div>
-          <p>Score actuel : {{ score }}<br>Score pondéré : {{ weightedScore }}</p>
-          <div class="timer-container mb-2">
-            <CircularTimer :timeLeft="timeLeft" :duration="questionTimeLimit" :active="timerActive" />
-          </div>
-          <div v-if="feedback" :class="['alert', feedback === 'success' ? 'alert-success animate__animated animate__bounceIn' : 'alert-danger animate__animated animate__shakeX']">
-            {{ feedbackText }}
-          </div>
-          <Transition
-            name="question-fade"
-            mode="out-in"
-            enter-active-class="animate__animated animate__fadeIn"
-            leave-active-class="animate__animated animate__fadeOut"
-          >
-            <div v-if="currentQuestion" :key="currentQuestion.id">
-              <h3 class="mb-3">{{ currentQuestion.title }}</h3>
-              <QuestionDisplay :question="currentQuestion" :isAnswered="isAnswered" @answer-clicked="answerClickedHandler" />
+            <p>Score actuel : {{ score }}<br>Score pondéré : {{ weightedScore }}</p>
+            <div class="timer-container mb-2">
+              <CircularTimer :timeLeft="timeLeft" :duration="questionTimeLimit" :active="timerActive" />
             </div>
-          </Transition>
-        </div>
-        <div v-else>
-          <h2>Quiz terminé !</h2>
-          <p>Votre score pondéré : {{ weightedScore }}</p>
+              <div v-if="feedback"
+                  class="fixed inset-0 z-50 flex items-center justify-center"
+                  aria-live="polite" role="status">
+                <div
+                  :class="[
+                    'bg-white rounded-lg shadow-lg px-6 py-4 max-w-xl w-full mx-4 pointer-events-auto',
+                    feedback === 'success' ? 'border-2 border-green-400 text-green-800' : 'border-2 border-red-400 text-red-800',
+                    'animate__animated', feedback === 'success' ? 'animate__bounceIn' : 'animate__shakeX'
+                  ]"
+                  role="alert"
+                >
+                  {{ feedbackText }}
+                </div>
+              </div>
+            <Transition
+              name="question-fade"
+              mode="out-in"
+              enter-active-class="animate__animated animate__fadeIn"
+              leave-active-class="animate__animated animate__fadeOut"
+            >
+              <div v-if="currentQuestion" :key="currentQuestion.id">
+                <h3 class="mb-3">{{ currentQuestion.title }}</h3>
+                <QuestionDisplay :question="currentQuestion" :isAnswered="isAnswered" @answer-clicked="answerClickedHandler" />
+              </div>
+            </Transition>
+          </div>
+          <div v-else>
+            <h2>Quiz terminé !</h2>
+            <p>Votre score pondéré : {{ weightedScore }}</p>
+          </div>
         </div>
       </div>
     </div>

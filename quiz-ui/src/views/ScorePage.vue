@@ -10,6 +10,39 @@ const previousParticipations = ref([]);
 const bestScore = ref(null);
 const challengeUrl = ref("");
 
+const copied = ref(false);
+
+function copyChallengeUrl() {
+  if (!challengeUrl.value) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(challengeUrl.value).then(() => {
+      copied.value = true;
+      setTimeout(() => (copied.value = false), 2000);
+    }).catch(() => {
+      fallbackCopyText(challengeUrl.value);
+    });
+  } else {
+    fallbackCopyText(challengeUrl.value);
+  }
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'absolute';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 2000);
+  } catch (e) {
+  }
+  document.body.removeChild(ta);
+}
+
 function generateChallengeUrl() {
   const baseUrl = window.location.origin;
   const params = new URLSearchParams({
@@ -64,14 +97,15 @@ onMounted(async () => {
     </div>
 
     <div class="flex flex-col md:flex-row items-center gap-3">
-      <button class="bg-main-violet text-white px-6 py-2 rounded-lg hover:bg-main-dark transition" @click="generateChallengeUrl"> Partager mon score</button>
+  <button class="bg-main-violet text-white px-6 py-2 rounded-lg hover:bg-custom-dark transition" @click="generateChallengeUrl"> Partager mon score</button>
       <div v-if="challengeUrl" class="flex items-center w-full md:w-auto gap-2 mt-2 md:mt-0">
         <input :value="challengeUrl" readonly class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-        <button class="bg-gray-200 px-3 py-2 rounded-lg hover:bg-gray-300 transition" @click="() => navigator.clipboard.writeText(challengeUrl)">Copier</button>
+        <button class="bg-gray-200 px-3 py-2 rounded-lg hover:bg-gray-300 transition" @click="copyChallengeUrl">Copier</button>
+        <span v-if="copied" class="text-sm text-green-600 ml-2">Copié !</span>
       </div>
     </div>
     <p v-if="challengeUrl" class="text-gray-500 text-sm text-center md:text-left mt-1">Envoie ce lien à un ami pour qu'il tente de battre ton score !</p>
 
-    <router-link to="/" class="block text-center bg-main-dark text-white px-6 py-2 rounded-lg hover:bg-main-violet transition mt-4">Retour à l'accueil</router-link>
+  <router-link to="/" class="block text-center bg-custom-dark text-white px-6 py-2 rounded-lg hover:bg-main-violet transition mt-4">Retour à l'accueil</router-link>
   </div>
 </template>

@@ -18,6 +18,18 @@ from question_repository import (
 import init_db
 import json
 import log_repository
+import os
+import openai
+import re
+from dotenv import load_dotenv
+load_dotenv()
+
+
+OPENAI_KEY = os.environ.get('OPENAI_API_KEY')
+openai.api_key = OPENAI_KEY
+OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-3.5-turbo')
+OPENAI_BASE_URL = os.environ.get('OPENAI_BASE_URL')  # optional; e.g. OpenRouter endpoint
+
 
 DB_PATH = "DB_quiz.db"
 
@@ -374,6 +386,97 @@ def resolve_selected_index(raw, answers_list):
             if k in raw:
                 return resolve_selected_index(raw[k], answers_list)
     return None
+
+
+@app.route('/questions/generate', methods=['POST'])
+def generate_questions_route():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return 'Unauthorized', 401
+    token = auth_header.split(" ")[1]
+    if not is_token_valid(token):
+        return 'Unauthorized', 401
+
+    data = _safe_json()
+    text = data.get('text')
+    count = int(data.get('count', 3))
+    auto = bool(data.get('autoInsert', False))
+
+    if not text:
+        return jsonify({'error': 'text required'}), 400
+
+    if not OPENAI_KEY or openai is None:
+        return jsonify({'error': 'OpenAI key not configured on server'}), 500
+
+    system_prompt = (
+        "You are an assistant that receives a source text and must generate a JSON array of questions in FRENCH "
+        "suitable for insertion into the quiz backend. Return ONLY valid JSON (an array) with objects having: "
+        "title (string), text (string), image (string|null), possibleAnswers (array of objects with fields text:string and isCorrect:boolean). "
+        "The 'title' and 'text' fields must be written in French. The 'image' field should contain either null or a short FRENCH keyword/phrase (not a URL) that best describes an image to illustrate the question (e.g. \"Tour Eiffel\", \"mitose\"). "
+        "Example: [{\"title\":\"...\",\"text\":\"...\",\"image\":null,\"possibleAnswers\":[{\"text\":\"a\",\"isCorrect\":false},{\"text\":\"b\",\"isCorrect\":true}]}]. "
+        "Génère exactement le nombre de questions demandé et ne renvoie aucun commentaire additionnel."
+    )
+    user_prompt = f"Texte source :\n\"\"\"\n{text}\n\"\"\"\n\nRetourne {count} question(s) en français au format JSON conforme au schéma décrit (title, text, image, possibleAnswers)."
+
+
+    default_headers = None
+    if OPENAI_BASE_URL and 'openrouter.ai' in OPENAI_BASE_URL.lower():
+        hdrs = {}
+        site = os.environ.get('OPENROUTER_SITE_URL')
+        title = os.environ.get('OPENROUTER_APP_NAME')
+        if site:
+            hdrs['HTTP-Referer'] = site
+        if title:
+            hdrs['X-Title'] = title
+        if hdrs:
+            default_headers = hdrs
+    client = openai.OpenAI(base_url=OPENAI_BASE_URL, default_headers=default_headers) if (OPENAI_BASE_URL or default_headers) else openai.OpenAI()
+    try:
+        resp = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': user_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1200
+        )
+        content = resp.choices[0].message.content
+    except Exception as e:
+        try:
+            from openai import RateLimitError, AuthenticationError, APIConnectionError, APITimeoutError
+            if isinstance(e, RateLimitError):
+                return jsonify({'error': 'insufficient_quota', 'message': 'OpenAI quota exceeded or rate limited. Check your plan/billing.'}), 429
+            if isinstance(e, AuthenticationError):
+                return jsonify({'error': 'openai_auth_failed', 'message': 'Invalid or missing OpenAI API key.'}), 401
+            if isinstance(e, (APIConnectionError, APITimeoutError)):
+                return jsonify({'error': 'openai_unreachable', 'message': 'Unable to reach OpenAI API. Try again later.'}), 502
+        except Exception:
+            pass
+        return jsonify({'error': 'openai_request_failed', 'message': str(e)}), 500
+
+
+    m = re.search(r"(\[\s*\{[\s\S]*\}\s*\])", content)
+    json_text = m.group(1) if m else content
+
+    try:
+        parsed = json.loads(json_text)
+    except Exception as e:
+        return jsonify({'error': 'Failed to parse JSON from OpenAI', 'detail': str(e), 'content': content}), 500
+
+    if auto:
+        inserted_ids = []
+        for q in parsed:
+            try:
+                question = Question.from_json(q)
+                qid = insert_question(question)
+                inserted_ids.append(qid)
+            except Exception as e:
+                log_repository.insert_log('admin', 'generate_insert', '/questions/generate', 'fail', str(e))
+        log_repository.insert_log('admin', 'generate_insert', '/questions/generate', 'success', f'count={len(inserted_ids)}')
+        return jsonify({'inserted': inserted_ids}), 200
+
+    return jsonify(parsed), 200
 
 @app.route('/logs', methods=['GET'])
 def get_logs():

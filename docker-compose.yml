@@ -2,6 +2,8 @@ services:
   backend:
     build: ./quiz-api
     image: likian/quiz-backend:latest
+    env_file:
+      - ./quiz-api/.env
     ports:
       - "5000:5000"
 

@@ -14,13 +14,11 @@ const copied = ref(false);
 
 function copyChallengeUrl() {
   if (!challengeUrl.value) return;
-  // Prefer Clipboard API, fallback to execCommand for older contexts
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(challengeUrl.value).then(() => {
       copied.value = true;
       setTimeout(() => (copied.value = false), 2000);
     }).catch(() => {
-      // fallback
       fallbackCopyText(challengeUrl.value);
     });
   } else {
@@ -41,7 +39,6 @@ function fallbackCopyText(text) {
     copied.value = true;
     setTimeout(() => (copied.value = false), 2000);
   } catch (e) {
-    // ignore
   }
   document.body.removeChild(ta);
 }

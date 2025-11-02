@@ -8,8 +8,7 @@ const progressPercent = computed(() => {
 });
 import { ref, onMounted, computed, watch } from 'vue';
 import CircularTimer from '../components/CircularTimer.vue';
-// TIMER & SCORE PONDÉRÉ
-const questionTimeLimit = 10; // secondes
+const questionTimeLimit = 10;
 const timeLeft = ref(questionTimeLimit);
 const timerActive = ref(false);
 const timerInterval = ref(null);
@@ -22,13 +21,12 @@ function startTimer() {
   timeUsed.value = 0;
   if (timerInterval.value) clearInterval(timerInterval.value);
   timerInterval.value = setInterval(() => {
-    if (timeLeft.value > 0) {
+      if (timeLeft.value > 0) {
       timeLeft.value--;
       timeUsed.value++;
     } else {
       timerActive.value = false;
       clearInterval(timerInterval.value);
-      // Optionnel: passer à la question suivante automatiquement
     }
   }, 1000);
 }
@@ -78,7 +76,6 @@ async function answerClickedHandler(answerIdx) {
     stopTimer();
     answers.value[currentQuestionPosition.value - 1] = answerIdx;
     const selected = currentQuestion.value.possibleAnswers?.[answerIdx];
-    // Score pondéré : max 100 pts/question, -10 pts/sec
     let questionScore = 0;
     if (selected && selected.isCorrect) {
       score.value++;

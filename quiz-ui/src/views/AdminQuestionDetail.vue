@@ -4,7 +4,6 @@
 
     <div class="flex justify-end gap-4 mb-6">
       <button @click="goBack" class="bg-main-violet text-white px-4 py-2 rounded-md hover:bg-[#A48FD0] transition">Retour</button>
-      
       <button @click="goToEditQuestion" class="bg-main-violet text-white px-4 py-2 rounded-md hover:bg-[#A48FD0] transition">Éditer</button>
       <button @click="deleteQuestion" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Supprimer</button>
     </div>

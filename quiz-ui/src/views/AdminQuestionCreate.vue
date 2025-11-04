@@ -57,7 +57,7 @@ const router = useRouter();
 
 const question = ref({ position: 1, title: '', text: '' });
 const answers = ref([
-  { text: '', isCorrect: false },
+  { text: '', isCorrect: true },
   { text: '', isCorrect: false },
   { text: '', isCorrect: false },
   { text: '', isCorrect: false },

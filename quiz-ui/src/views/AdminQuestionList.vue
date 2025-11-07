@@ -18,7 +18,7 @@
           <div class="flex items-center gap-4">
             <div>
               <label class="block text-sm">Nombre de questions</label>
-              <input v-model.number="count" type="number" min="1" max="10" class="w-24 border px-2 py-1 rounded" />
+              <input v-model.number="count" type="number" min="1" max="3" class="w-24 border px-2 py-1 rounded" />
             </div>
             <label class="flex items-center gap-2">
               <input type="checkbox" v-model="autoInsert" />

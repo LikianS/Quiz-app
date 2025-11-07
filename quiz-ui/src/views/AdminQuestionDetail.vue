@@ -3,6 +3,7 @@
     <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Détail de la Question</h2>
 
     <div class="flex justify-end gap-4 mb-6">
+      <button @click="goBack" class="bg-main-violet text-white px-4 py-2 rounded-md hover:bg-[#A48FD0] transition">Retour</button>
       <button @click="goToEditQuestion" class="bg-main-violet text-white px-4 py-2 rounded-md hover:bg-[#A48FD0] transition">Éditer</button>
       <button @click="deleteQuestion" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Supprimer</button>
     </div>
@@ -49,6 +50,10 @@ onMounted(async () => {
 
 function goToEditQuestion() {
   router.push(`/admin/questions/${questionId}/edit`)
+}
+
+function goBack() {
+  router.push(`/admin`)
 }
 
 async function deleteQuestion() {

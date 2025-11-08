@@ -29,7 +29,7 @@ load_dotenv()
 OPENAI_KEY = os.environ.get('OPENAI_API_KEY')
 openai.api_key = OPENAI_KEY
 OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-3.5-turbo')
-OPENAI_BASE_URL = os.environ.get('OPENAI_BASE_URL')  # optional; e.g. OpenRouter endpoint
+OPENAI_BASE_URL = os.environ.get('OPENAI_BASE_URL')
 
 
 DB_PATH = "DB_quiz.db"

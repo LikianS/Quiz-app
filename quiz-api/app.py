@@ -21,6 +21,7 @@ import log_repository
 import os
 import openai
 import re
+from openai import RateLimitError, AuthenticationError, APIConnectionError, APITimeoutError
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -444,7 +445,6 @@ def generate_questions_route():
         content = resp.choices[0].message.content
     except Exception as e:
         try:
-            from openai import RateLimitError, AuthenticationError, APIConnectionError, APITimeoutError
             if isinstance(e, RateLimitError):
                 return jsonify({'error': 'insufficient_quota', 'message': 'OpenAI quota exceeded or rate limited. Check your plan/billing.'}), 429
             if isinstance(e, AuthenticationError):

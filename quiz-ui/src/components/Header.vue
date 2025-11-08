@@ -4,7 +4,7 @@
       <img src="@/assets/logo.png" alt="Logo NeuroQuiz" class="h-full" />
     </RouterLink>
 
-    <ul class="m-auto flex space-x-10">
+      <ul class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex space-x-10">
       <template v-if="!isAdmin">
         <li>
           <button @click="scrollToSection('about')" class="hover:text-main-violet">À propos</button>
@@ -23,14 +23,14 @@
       </template>
     </ul>
 
-    <template v-if="!isAdmin">
-      <RouterLink to="/login" class="mr-10 p-2 rounded-md border border-white hover:text-main-violet hover:bg-[#171717] transition">Connexion</RouterLink>
-    </template>
-    <template v-else>
-      <button @click="logoutAdmin" class="ml-2 hover:text-main-violet">Déconnexion</button>
-    </template>
+    <div class="ml-auto flex items-center space-x-4">
+      <template v-if="!isAdmin">
+        <RouterLink to="/login" class="p-2 rounded-md border border-white hover:text-main-violet hover:bg-[#171717] transition">Connexion</RouterLink>
+      </template>
+      <template v-else>
+        <button @click="logoutAdmin" class="hover:text-main-violet">Déconnexion</button>
+      </template>
 
-    <div class="flex flex-col items-center ml-6">
       <div class="flex rounded-full overflow-hidden">
         <button @click="toggleSound(true)" :class="['px-4 py-1 transition-colors', isPlaying ? 'bg-white text-black' : 'bg-black text-white']">ON</button>
         <button @click="toggleSound(false)" :class="['px-4 py-1 transition-colors', !isPlaying ? 'bg-white text-black' : 'bg-black text-white']">OFF</button>
@@ -43,7 +43,7 @@
 
 <script setup>
 import { RouterLink, useRouter, useRoute } from 'vue-router';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import themeSong from '@/assets/Themesong.mp3';
 
 const router = useRouter();
@@ -51,6 +51,18 @@ const route = useRoute();
 
 const token = ref(localStorage.getItem('token'));
 const isAdmin = computed(() => !!token.value);
+
+function handleStorageEvent() {
+  token.value = localStorage.getItem('token');
+}
+
+onMounted(() => {
+  window.addEventListener('storage', handleStorageEvent);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('storage', handleStorageEvent);
+});
 
 function logoutAdmin() {
   localStorage.removeItem('token');
